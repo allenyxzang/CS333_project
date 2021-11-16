@@ -1,24 +1,38 @@
+import json
+import networkx as nx
 import numpy as np
 from numpy.random import Generator
-import math
 
-# global simulation parameters
-MEMO_SIZE = 1
-MEMO_LIFETIME = 100 # in unit of simulation time step
-ENTANGLEMENT_GEN_PROB = 0.01
-ENTANGLEMENT_SWAP_PROB = 1
 
-# network topology in JSON
+# TODO: network topology in JSON
+def gen_network_json(filename, size, net_type, seed=0):
+    if net_type == "ring":
+        arr = np.ndarray((size, size), int)
+        for i in range(size):
+            arr[i, (i+1) % size] = 1
+            arr[(i+1) % size, i] = 1
+
+    elif net_type == "as_net":
+        G = nx.random_internet_as_graph(size, seed)
+        arr = nx.convert_matrix.to_numpy_array(G)
+
+    else:
+        raise ValueError("Unknown graph type " + net_type)
+
+    fh = open(filename)
+    topo = {"array": arr}
+    json.dump(topo, fh)
+    return arr
+
 
 # generator of traffic matrix 
 def gen_traffic_mtx(node_num, rng):
-    mtx = rng.random.rand(node_num,node_num)
+    mtx = rng.random.rand(node_num, node_num)
     for i in range(node_num):
-        for j in range(node_num):
-            if i == j:
-                mtx[i, j] = 0 # no self-to-self traffic
+        mtx[i, i] = 0  # no self-to-self traffic
 
     return mtx
+
 
 # generator of request queue
 def gen_request_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
@@ -30,13 +44,14 @@ def gen_request_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
         rand_col = rng_mtx.random.randint(node_num)
 
         if rng_judge.random() < traffic_mtx[rand_row, rand_col]:
-            queue.append({rand_row: rand_col}) # request in form of dict, key is the number of origin and value is the number of destination
+            # request in form of dict, key is the number of origin and value is the number of destination
+            queue.append({rand_row: rand_col})
             idx += 1
     
     return queue
 
 
-class Node():
+class Node:
     """Class of network nodes.
 
     Hold quantum memories, information of total network topology (global variable) and nearest neighbor entanglement.
@@ -45,7 +60,7 @@ class Node():
     Attributes:
         label (int): integer to label the node, corresponding to the indices of traffic matrix and requests
         memo_size (int): number of quantum memories in the node, assuming memories are of the same type
-        lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store quantum entanglement
+        lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
         prob_dist (Dict[int, float]): probability distribution to select direct neighbors to generate entanglement
         entanglement_links (List): collection of established entanglement links with direct neighbors
     """
@@ -67,22 +82,18 @@ class Node():
         self.prob_dist = new_prob_dist
 
     def memo_reserve(self):
-        """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories
-        
-        Args:
-            num (int): number of memories to be reserved
-        """
+        """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories."""
         
         idx = 0
         while idx < len(self.memories):
-            if self.memories[idx].reserved == True:
-                idx +=1
+            if self.memories[idx].reserved:
+                idx += 1
             else:
                 self.memories[idx].reserve()
                 break
             
 
-class Memory():
+class Memory:
     """Simplified class of quantum memories to be stored in a node.
 
     Omitting details of memory efficiency, quantum state fidelity, photon wavelength, memory maximal frequency of reuse, etc.
@@ -93,7 +104,7 @@ class Memory():
     """
 
     def __init__(self, name, lifetime):
-        """Constructor of memoryinstance.
+        """Constructor of memory instance.
 
         Args:
             name: name of memory instance
@@ -103,19 +114,20 @@ class Memory():
         self.name = name
         self.owner = None
         self.lifetime = lifetime
-        self.reserved = False # Boolean representing if the memory has been reserved for use
+        self.reserved = False  # Boolean representing if the memory has been reserved for use
         self.entanglement = None
 
     def entangle(self, memory):
-        self.entanglement = memory # assuming only bipartite entanglement
+        self.entanglement = memory  # assuming only bipartite entanglement
 
     def set_owner(self, node):
         self.owner = node
 
     def reserve(self):
-        if self.reserved == False:
+        if not self.reserved:
             self.reserved = True
         else:
             raise Exception("This memory has already been reserved")
-    
+
+
 # TODO: protocol interface, network topology, etc.
