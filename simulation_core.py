@@ -106,11 +106,12 @@ class Node:
 
     def create_random_link(self):
         neighbor_label = self.generation_protocol.choose_link()
-        self.create_link(neighbor_label)
+        neighbor = next((n for n in self.neighbors if n.label == neighbor_label), None)
+        self.create_link(neighbor)
 
-    def create_link(self, other_label):
-        if self.rng.random() < self.gen_success_prob and self.memo_reserve():
-            self.entanglement_links.append(other_label)
+    def create_link(self, other_node):
+        if self.rng.random() < self.gen_success_prob:
+            raise NotImplementedError
 
     def swap(self, memory1, memory2):
         """Method to do entanglement swapping. 
