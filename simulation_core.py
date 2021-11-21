@@ -1,7 +1,7 @@
 import json
 import networkx as nx
 import numpy as np
-from numpy.random import Generator
+from numpy.random import default_rng
 
 
 # TODO: network topology in JSON
@@ -62,10 +62,11 @@ class Node:
         neighbors (List[Node]): list of neighboring nodes
         memo_size (int): number of quantum memories in the node, assuming memories are of the same type
         lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
-        entanglement_links (List): collection of established entanglement links with direct neighbors
+        entanglement_links (List[int]): collection of established entanglement links with direct neighbors
     """
 
-    def __init__(self, label, neighbors, memo_size, lifetime, adapt_param):
+    def __init__(self, label, neighbors, memo_size, lifetime,
+                 gen_success_prob, swap_success_prob, adapt_param, seed=0):
         self.label = label
         self.neighbors = neighbors
         self.memo_size = memo_size
@@ -80,11 +81,16 @@ class Node:
         # create protocol
         self.generation_protocol = GenerationProtocol(self, adapt_param)
 
+        # create rng and store params
+        self.rng = default_rng(seed)
+        self.gen_success_prob = gen_success_prob
+        self.swap_success_prob = swap_success_prob
+
     def memo_reserve(self):
         """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories.
 
         Returns:
-            (bool): if there was an available memory to reserve.
+            bool: if there was an available memory to reserve.
         """
         
         idx = 0
@@ -98,8 +104,13 @@ class Node:
         if idx == len(self.memories):
             return False
 
-    def create_links(self):
-        self.generation_protocol.create_links()
+    def create_random_link(self):
+        neighbor_label = self.generation_protocol.choose_link()
+        self.create_link(neighbor_label)
+
+    def create_link(self, other_label):
+        if self.rng.random() < self.gen_success_prob and self.memo_reserve():
+            self.entanglement_links.append(other_label)
 
 
 class Memory:
@@ -189,8 +200,14 @@ class GenerationProtocol:
         for neighbor in self.node.neighbors:
             self.prob_dist[neighbor.label] = 1/(len(self.node.neighbors) - len(S | T)) * (1 - sum_st_new)
 
-    def create_links(self):
-        pass
+    def choose_link(self):
+        """Method to choose a link to attempt entanglement.
+
+        Returns:
+            int: label of node chosen for entanglement
+        """
+
+        return self.node.rng.random_choice(self.prob_dist.keys(), self.prob_dist.values())
 
 
 # TODO: network topology, etc.
