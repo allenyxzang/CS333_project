@@ -112,6 +112,29 @@ class Node:
         if self.rng.random() < self.gen_success_prob and self.memo_reserve():
             self.entanglement_links.append(other_label)
 
+    def swap(self, memory1, memory2):
+        """Method to do entanglement swapping. 
+        
+        Will reset the two involved memories' entanglement state. 
+        Will modify entanglement state of original entangled parties of memory1 and memory2.
+        Does not modify start_time, and expiration of entanglement is determined by the first memory expiration
+        """
+
+        memo1 = memory1.entangled_memory["memo"].entangled_memory["memo"]
+        memo2 = memory2.entangled_memory["memo"].entangled_memory["memo"]
+        node1 = memory1.entangled_memory["memo"].entangled_memory["node"]
+        node2 = memory2.entangled_memory["memo"].entangled_memory["node"]
+
+        #entanglement connection
+        memory1.entangled_memory["memo"].entangled_memory["node"] = node2
+        memory2.entangled_memory["memo"].entangled_memory["node"] = node1
+        memory1.entangled_memory["memo"].entangled_memory["memo"] = memo2
+        memory2.entangled_memory["memo"].entangled_memory["memo"] = memo1
+
+        #entanglement reset
+        memory1.expire()
+        memory2.expire()
+
 
 class Memory:
     """Simplified class of quantum memories to be stored in a node.
@@ -135,10 +158,10 @@ class Memory:
         self.owner = None
         self.lifetime = lifetime
         self.reserved = False  # Boolean representing if the memory has been reserved for use
-        self.entanglement = None
+        self.entangled_memory = {"node": None, "memo": None, "start_time": None}
 
-    def entangle(self, memory):
-        self.entanglement = memory  # assuming only bipartite entanglement
+    def entangle(self, memory, time):
+        self.entangled_memory = {"node": memory.owner, "memo": memory, "start_time": time}
 
     def set_owner(self, node):
         self.owner = node
@@ -148,6 +171,9 @@ class Memory:
             self.reserved = True
         else:
             raise Exception("This memory has already been reserved")
+
+    def expire(self):
+        self.entangled_memory = {"node": None, "memo": None, "start_time": None}
 
 
 class GenerationProtocol:
