@@ -29,7 +29,7 @@ def run_simulation(graph_arr, nodes, queue, end_time):
     while time < end_time:
         # call function to run node protocol
         for node in nodes:
-            pass
+            node.create_links()
 
         if time == request_time:
             # submit request and update next request time
@@ -58,7 +58,7 @@ def gen_request_time_list(start_time, num_request, interval=10):
     
 def gen_request_time_list_rand(start_time, num_request, rng, lower_bound=1, upper_bound=10):
     """Function to generate a list of times at each of which a request starts to get served, in order to mimic a central request controller.
-    Time interval between adjacent request is random integer. Can modify this function to change the distribution."""
+    Time interval between adjacent requests is a random integer. Can modify this function to change the distribution."""
 
     request_time_list = [start_time]
     for i in range(num_request - 1):

@@ -59,30 +59,33 @@ class Node:
 
     Attributes:
         label (int): integer to label the node, corresponding to the indices of traffic matrix and requests
+        neighbors (List[Node]): list of neighboring nodes
         memo_size (int): number of quantum memories in the node, assuming memories are of the same type
         lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
-        prob_dist (Dict[int, float]): probability distribution to select direct neighbors to generate entanglement
         entanglement_links (List): collection of established entanglement links with direct neighbors
     """
 
-    def __init__(self, label, memo_size, lifetime):
+    def __init__(self, label, neighbors, memo_size, lifetime, adapt_param):
         self.label = label
+        self.neighbors = neighbors
         self.memo_size = memo_size
         self.memories = []
-        self.prob_dist = {}
         self.entanglement_links = []
 
+        # create memories
         for i in range(memo_size):
             memory = Memory("Node" + str(self.label) + "[%d]" % i, lifetime)
             self.memories.append(memory)
-        
-    def prob_dist_update(self, new_prob_dist):
-        """Method for adaptive protocol to update probabilistic distribution."""
 
-        self.prob_dist = new_prob_dist
+        # create protocol
+        self.generation_protocol = GenerationProtocol(self, adapt_param)
 
     def memo_reserve(self):
-        """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories."""
+        """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories.
+
+        Returns:
+            (bool): if there was an available memory to reserve.
+        """
         
         idx = 0
         while idx < len(self.memories):
@@ -90,8 +93,14 @@ class Node:
                 idx += 1
             else:
                 self.memories[idx].reserve()
-                break
-            
+                return True
+
+        if idx == len(self.memories):
+            return False
+
+    def create_links(self):
+        self.generation_protocol.create_links()
+
 
 class Memory:
     """Simplified class of quantum memories to be stored in a node.
@@ -130,4 +139,58 @@ class Memory:
             raise Exception("This memory has already been reserved")
 
 
-# TODO: protocol interface, network topology, etc.
+class GenerationProtocol:
+    """Class representing protocol to generate entanglement links.
+
+    Attributes:
+        node (Node):
+        alpha (float):
+        prob_dist (Dict[int, float]): probability distribution to select direct neighbors to generate entanglement.
+    """
+
+    def __init__(self, node, adapt_param):
+        """
+
+        Args:
+            node (Node):
+            adapt_param (float):
+        """
+        self.node = node
+        self.alpha = adapt_param
+
+        init_prob = 1/len(node.neighbors)
+        self.prob_dist = {}
+        for neighbor in node.neighbors:
+            self.prob_dist[neighbor.label] = init_prob
+
+    def update_dist(self, links_available, links_used):
+        """Method to update the probability distribution adaptively.
+
+        Called when a request is sent to the network.
+
+        Args:
+            links_available (List[int]): entanglement links available before the request is submitted.
+            links_used (List[int]): entanglement links used to complete the request request.
+        """
+
+        avail = set(links_available)
+        used = set(links_used)
+
+        S = avail & used
+        T = used - avail
+
+        # increase probability for links in T
+        sum_st = sum([self.prob_dist[i] for i in (S | T)])
+        for t in T:
+            self.prob_dist[t] += (self.alpha/len(T)) * (1 - sum_st)
+
+        # decrease probability for links not in T or S
+        sum_st_new = sum([self.prob_dist[i] for i in (S | T)])
+        for neighbor in self.node.neighbors:
+            self.prob_dist[neighbor.label] = 1/(len(self.node.neighbors) - len(S | T)) * (1 - sum_st_new)
+
+    def create_links(self):
+        pass
+
+
+# TODO: network topology, etc.
