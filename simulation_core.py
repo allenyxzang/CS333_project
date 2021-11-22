@@ -44,8 +44,8 @@ def gen_request_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
         rand_col = rng_mtx.random.randint(node_num)
 
         if rng_judge.random() < traffic_mtx[rand_row, rand_col]:
-            # request in form of dict, key is the number of origin and value is the number of destination
-            queue.append({rand_row: rand_col})
+            # request in form of two-element tuple, fisrt element is the number of origin and second element is the number of destination
+            queue.append((rand_row, rand_col))
             idx += 1
     
     return queue
@@ -63,6 +63,7 @@ class Node:
         memo_size (int): number of quantum memories in the node, assuming memories are of the same type
         lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
         entanglement_links (List[int]): collection of established entanglement links with direct neighbors
+        entanglement_link_nums (Dict[int, int]): keeps track of numbers of entanglement links with direct neighbors (for path finding alg.)
     """
 
     def __init__(self, label, neighbors, memo_size, lifetime,
@@ -72,6 +73,14 @@ class Node:
         self.memo_size = memo_size
         self.memories = []
         self.entanglement_links = []
+        self.entanglement_link_nums = {}
+
+        for i in range(len(self.neighbors)):
+            label = self.neighbors[i].label
+            self.entanglement_link_nums[label] = 0
+        
+        for i in self.entanglement_links:
+            self.entanglement_link_nums[i] += 1
 
         # create memories
         for i in range(memo_size):
@@ -236,5 +245,68 @@ class GenerationProtocol:
 
         return self.node.rng.random_choice(self.prob_dist.keys(), self.prob_dist.values())
 
+
+class RequestStack:
+    """Class of the request stack to be served. The sequence of feeding requests into the network is determined by request time.
+
+    Attributes:
+        time_list (List[int]): list of times to submit individual requests
+        request_queue (List[Tuple[int,int]]): queue of requests for generating entanglement between two nodes
+    """
+
+    def __init__(self, time_list, request_queue):
+        """Constructor of request stack instance.
+
+        Args:
+            time_list (List[int]): list of times to submit individual requests
+            request_queue (List[Tuple[int,int]]): queue of requests for generating entanglement between two nodes
+            requests (List[Request]): list of request instances in sequence of start times
+        """
+        
+        assert len(time_list) == len(request_queue), "Time list and request queue shapes incompatible."
+        self.time_list = time_list
+        self.request_queue = request_queue
+        self.requests = []
+
+        for i in range(len(time_list)):
+            start_time = self.time_list[i]
+            pair = self.request_queue[i]
+            request = Request(start_time, pair)
+            self.requests.append(request)
+
+    def pop(self):
+        """Method to remove the submitted request from the stack.
+        
+        Return most updated request and its request time.
+        """
+
+        request_time = self.time_list.pop(0)
+        request = self.request_queue.pop(0)
+
+        return request_time, request
+
+
+class Request:
+    """Class representing single requests for generating entanglement between two nodes.
+
+    Attributes:
+        start_time (int): time to submit the request
+        pair (Tuple[int, int]): keeps track of labels of origin and destination nodes of the request
+        completed (Bool): Boolean to keep track if the request has been completed
+    """
+
+    def __init__(self, start_time, pair):
+        """Constructor of a request instance.
+
+        Args:
+            start_time (int): time to submit the request
+            pair (Tuple[int, int]): keeps track of labels of origin and destination nodes of the request
+        """
+
+        self.start_time = start_time
+        self.pair = pair
+        self.completed = False
+
+# TODO: request methods
 
 # TODO: network topology, etc.
