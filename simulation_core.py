@@ -305,6 +305,21 @@ class Request:
         self.pair = pair
         self.completed = False
 
+    def get_path(self, network, nodes):
+        """Get optimal path to service request.
+
+        Uses greedy algorithm based on number of existing entanglement links.
+
+        Args:
+            network (numpy.ndarray): Adjacency matrix for the network.
+            nodes (List[Node]): List of node objects for the network, contains current entanglement info.
+
+        Returns:
+            List[int]: Optimal path as list of node labels.
+        """
+
+        raise NotImplementedError
+
 # TODO: request methods
 
 # TODO: network topology, etc.
