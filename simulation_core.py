@@ -44,7 +44,8 @@ def gen_request_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
         rand_col = rng_mtx.random.randint(node_num)
 
         if rng_judge.random() < traffic_mtx[rand_row, rand_col]:
-            # request in form of two-element tuple, fisrt element is the number of origin and second element is the number of destination
+            # request in form of two-element tuple
+            # first element is the label of the origin node, and second element is the label of the destination
             queue.append((rand_row, rand_col))
             idx += 1
     
@@ -62,7 +63,6 @@ class Node:
         neighbors (List[Node]): list of neighboring nodes
         memo_size (int): number of quantum memories in the node, assuming memories are of the same type
         lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
-        entanglement_links (List[int]): collection of established entanglement links with direct neighbors
         entanglement_link_nums (Dict[int, int]): keeps track of numbers of entanglement links with direct neighbors (for path finding alg.)
     """
 
@@ -72,15 +72,7 @@ class Node:
         self.neighbors = neighbors
         self.memo_size = memo_size
         self.memories = []
-        self.entanglement_links = []
-        self.entanglement_link_nums = {}
-
-        for i in range(len(self.neighbors)):
-            label = self.neighbors[i].label
-            self.entanglement_link_nums[label] = 0
-        
-        for i in self.entanglement_links:
-            self.entanglement_link_nums[i] += 1
+        self.entanglement_link_nums = {n.label: 0 for n in neighbors}
 
         # create memories
         for i in range(memo_size):
@@ -122,7 +114,8 @@ class Node:
         if self.rng.random() < self.gen_success_prob:
             raise NotImplementedError
 
-    def swap(self, memory1, memory2):
+    @staticmethod
+    def swap(memory1, memory2):
         """Method to do entanglement swapping. 
         
         Will reset the two involved memories' entanglement state. 
@@ -135,13 +128,13 @@ class Node:
         node1 = memory1.entangled_memory["memo"].entangled_memory["node"]
         node2 = memory2.entangled_memory["memo"].entangled_memory["node"]
 
-        #entanglement connection
+        # entanglement connection
         memory1.entangled_memory["memo"].entangled_memory["node"] = node2
         memory2.entangled_memory["memo"].entangled_memory["node"] = node1
         memory1.entangled_memory["memo"].entangled_memory["memo"] = memo2
         memory2.entangled_memory["memo"].entangled_memory["memo"] = memo1
 
-        #entanglement reset
+        # entanglement reset
         memory1.expire()
         memory2.expire()
 
@@ -250,11 +243,14 @@ class GenerationProtocol:
 
 
 class RequestStack:
-    """Class of the request stack to be served. The sequence of feeding requests into the network is determined by request time.
+    """Class of the request stack to be served.
+
+    The sequence of feeding requests into the network is determined by the request time list.
 
     Attributes:
         time_list (List[int]): list of times to submit individual requests
         request_queue (List[Tuple[int,int]]): queue of requests for generating entanglement between two nodes
+        requests (List[Request]): list of request instances in order of start time
     """
 
     def __init__(self, time_list, request_queue):
@@ -263,7 +259,6 @@ class RequestStack:
         Args:
             time_list (List[int]): list of times to submit individual requests
             request_queue (List[Tuple[int,int]]): queue of requests for generating entanglement between two nodes
-            requests (List[Request]): list of request instances in sequence of start times
         """
         
         assert len(time_list) == len(request_queue), "Time list and request queue shapes incompatible."
