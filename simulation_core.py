@@ -279,9 +279,10 @@ class RequestStack:
         """
 
         request_time = self.time_list.pop(0)
-        request = self.request_queue.pop(0)
+        pair = self.request_queue.pop(0)
+        request = self.requests.pop(0)
 
-        return request_time, request
+        return request_time, pair, request
 
 
 class Request:
