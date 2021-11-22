@@ -225,16 +225,19 @@ class GenerationProtocol:
 
         S = avail & used
         T = used - avail
+        not_used = set([n.label for n in self.node.neighbors]) - used
 
         # increase probability for links in T
         sum_st = sum([self.prob_dist[i] for i in (S | T)])
+        new_prob_increase = (self.alpha/len(T)) * (1 - sum_st)
         for t in T:
-            self.prob_dist[t] += (self.alpha/len(T)) * (1 - sum_st)
+            self.prob_dist[t] += new_prob_increase
 
         # decrease probability for links not in T or S
-        sum_st_new = sum([self.prob_dist[i] for i in (S | T)])
-        for neighbor in self.node.neighbors:
-            self.prob_dist[neighbor.label] = 1/(len(self.node.neighbors) - len(S | T)) * (1 - sum_st_new)
+        sum_st_new = sum([self.prob_dist[i] for i in used])
+        new_prob = (1 - sum_st_new) / len(not_used)
+        for i in not_used:
+            self.prob_dist[i] = new_prob
 
     def choose_link(self):
         """Method to choose a link to attempt entanglement.
@@ -243,7 +246,7 @@ class GenerationProtocol:
             int: label of node chosen for entanglement
         """
 
-        return self.node.rng.random_choice(self.prob_dist.keys(), self.prob_dist.values())
+        return self.node.rng.choice(self.prob_dist.keys(), self.prob_dist.values())
 
 
 class RequestStack:
