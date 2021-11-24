@@ -1,5 +1,6 @@
 from numpy.random import default_rng
 from simulation_core import *
+from hardware import Node
 
 # Network parameters
 CONFIG = "network.json"
@@ -46,28 +47,6 @@ def run_simulation(graph_arr, nodes, queue, end_time):
     raise NotImplementedError
 
 
-def gen_request_time_list(start_time, num_request, interval=10):
-    """Function to generate a list of times at each of which a request starts to get served, in order to mimic a central request controller.
-    Time interval between adjacent request is constant."""
-
-    request_time_list = [start_time]
-    for i in range(num_request - 1):
-        request_time_list.append(request_time_list[-1] + interval)
-
-    return request_time_list
-    
-    
-def gen_request_time_list_rand(start_time, num_request, rng, lower_bound=1, upper_bound=10):
-    """Function to generate a list of times at each of which a request starts to get served, in order to mimic a central request controller.
-    Time interval between adjacent requests is a random integer. Can modify this function to change the distribution."""
-
-    request_time_list = [start_time]
-    for i in range(num_request - 1):
-        request_time_list.append(request_time_list[-1] + rng.random.random_integers(lower_bound, high=upper_bound))
-
-    return request_time_list
-
-
 if __name__ == "__main__":
     # Setup rng
     rng = default_rng(SIM_SEED)
@@ -96,3 +75,7 @@ if __name__ == "__main__":
 
         # Run simulation
         res = run_simulation(graph_arr, nodes, queue, END_TIME)
+
+# TODO: request methods
+
+# TODO: network topology, etc.
