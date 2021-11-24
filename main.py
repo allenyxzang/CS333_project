@@ -30,7 +30,7 @@ def run_simulation(graph_arr, nodes, queue, end_time):
     while time < end_time:
         # call function to run node protocol
         for node in nodes:
-            node.create_random_link()
+            node.create_random_link(time)
 
         if time == request_time:
             # submit request and update next request time
