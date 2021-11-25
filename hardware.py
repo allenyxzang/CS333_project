@@ -114,6 +114,8 @@ class Node:
         Will reset the two involved memories' entanglement state.
         Will modify entanglement state of original entangled parties of memory1 and memory2.
         Does not modify start_time, and expiration of entanglement is determined by the first memory expiration
+
+        Return the result of swapping (successful or not).
         """
 
         memo1 = memory1.entangled_memory["memo"]
@@ -121,15 +123,27 @@ class Node:
         node1 = memory1.entangled_memory["memo"]
         node2 = memory2.entangled_memory["memo"]
 
-        # entanglement connection
-        memo1.entangled_memory["memo"].entangled_memory["node"] = node2
-        memo2.entangled_memory["memo"].entangled_memory["node"] = node1
-        memo1.entangled_memory["memo"].entangled_memory["memo"] = memo2
-        memo2.entangled_memory["memo"].entangled_memory["memo"] = memo1
+        if self.rng.random() > self.swap_success_prob:
+            # entanglement connection
+            memo1.entangled_memory["memo"].entangled_memory["node"] = node2
+            memo2.entangled_memory["memo"].entangled_memory["node"] = node1
+            memo1.entangled_memory["memo"].entangled_memory["memo"] = memo2
+            memo2.entangled_memory["memo"].entangled_memory["memo"] = memo1
 
-        # entanglement reset
-        self.memo_expire(memory1)
-        self.memo_expire(memory2)
+            # entanglement reset
+            self.memo_expire(memory1)
+            self.memo_expire(memory2)
+
+            return True
+
+        else:
+            # if unsuccessful, all involved memories entanglement reset
+            self.memo_expire(memory1)
+            self.memo_expire(memory2)
+            node1.memo_expire(memo1)
+            node2.memo_expire(memo2)
+
+            return False
 
 
 class Memory:
