@@ -1,6 +1,7 @@
 from numpy.random import default_rng
 from simulation_core import *
-from hardware import Node
+from hardware import *
+from protocols import *
 
 # Network parameters
 CONFIG = "network.json"
@@ -23,10 +24,12 @@ NUM_TRIALS = 100
 QUEUE_LEN = 100
 
 
-def run_simulation(graph_arr, nodes, queue, end_time):
+def run_simulation(graph_arr, nodes, request_stack, end_time):
     time = 0
     request_time = 0  # TODO: request class
     request_completed = False  # TODO: request class
+    requests_toserve = [] # keep track of incompleted requests, in case new request comes in before previous request is completed
+    congestion = [] # keep track of number of incompleted requests at the end of each time step
 
     while time < end_time:
         # call function to run node protocol
@@ -35,10 +38,16 @@ def run_simulation(graph_arr, nodes, queue, end_time):
 
         if time == request_time:
             # submit request and update next request time
-            pass
+            request_tuple = request_stack.pop()
+            request_time, request_pair, request = request_tuple[0]
+            requests_toserve.append(request)
+            # TODO: how the first request to serve determine what operation to perform
+            
         if request_completed:
             # record latency
             pass
+
+        congestion.append(len(requests_toserve))
 
         time += 1
 
@@ -70,11 +79,15 @@ if __name__ == "__main__":
     traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
 
     for trial in range(NUM_TRIALS):
-        # Generate queue
-        queue = gen_request_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
+        # Generate request node pair queue
+        pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, 30, rng, rng)
+        # Generate request submssion time list with constant interval
+        time_list = gen_request_time_list(10, 30, interval = 15)
+        # Generate request stack instance
+        request_stack = RequestStack(time_list, pair_queue)
 
         # Run simulation
-        res = run_simulation(graph_arr, nodes, queue, END_TIME)
+        res = run_simulation(graph_arr, nodes, request_stack, END_TIME)
 
 # TODO: request methods
 

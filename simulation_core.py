@@ -33,8 +33,8 @@ def gen_traffic_mtx(node_num, rng):
     return mtx
 
 
-# generator of request queue
-def gen_request_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
+# generator of request node pair queue
+def gen_pair_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
     queue = []
     idx = 0
     while idx < queue_len:
@@ -43,7 +43,7 @@ def gen_request_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
         rand_col = rng_mtx.random.randint(node_num)
 
         if rng_judge.random() < traffic_mtx[rand_row, rand_col]:
-            # request in form of two-element tuple
+            # request node pair in form of two-element tuple
             # first element is the label of the origin node, and second element is the label of the destination
             queue.append((rand_row, rand_col))
             idx += 1

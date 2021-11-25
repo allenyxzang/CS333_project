@@ -68,26 +68,26 @@ class RequestStack:
 
     Attributes:
         time_list (List[int]): list of times to submit individual requests
-        request_queue (List[Tuple[int,int]]): queue of requests for generating entanglement between two nodes
+        pair_queue (List[Tuple[int,int]]): queue of request node pairs for entanglement generation
         requests (List[Request]): list of request instances in order of start time
     """
 
-    def __init__(self, time_list, request_queue):
+    def __init__(self, time_list, pair_queue):
         """Constructor of request stack instance.
 
         Args:
             time_list (List[int]): list of times to submit individual requests
-            request_queue (List[Tuple[int,int]]): queue of requests for generating entanglement between two nodes
+            pair_queue (List[Tuple[int,int]]): queue of request node pairs for entanglement generation
         """
 
-        assert len(time_list) == len(request_queue), "Time list and request queue shapes incompatible."
+        assert len(time_list) == len(pair_queue), "Time list and request queue shapes incompatible."
         self.time_list = time_list
-        self.request_queue = request_queue
+        self.pair_queue = pair_queue
         self.requests = []
 
         for i in range(len(time_list)):
             start_time = self.time_list[i]
-            pair = self.request_queue[i]
+            pair = self.pair_queue[i]
             request = Request(start_time, pair)
             self.requests.append(request)
 
@@ -98,7 +98,7 @@ class RequestStack:
         """
 
         request_time = self.time_list.pop(0)
-        pair = self.request_queue.pop(0)
+        pair = self.pair_queue.pop(0)
         request = self.requests.pop(0)
 
         return request_time, pair, request
