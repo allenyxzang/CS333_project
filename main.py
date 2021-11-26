@@ -62,26 +62,64 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     right = route[i+1]
 
                 two_neighbors = (left, right)
-                nodes[idx].next_neighbors.append(two_neighbors)
+                nodes[idx].neighbors_to_connect.append(two_neighbors)
 
-            # TODO: how the first request to serve determine what operation to perform
+            # TODO: adaptively update probability distribution when a request is submitted to the network
+            # TODO: record available links, to be used links, to be generated links for visualization
         
         route = requests_toserve[0].route
+        origin_node = nodes[route[0]]
+        destination_node = nodes[route[-1]]
 
         # call function to run node (entanglement generation) protocol
         for node in nodes:
-            # if node is not in route, create random link
-            # if node is in route
-                # if lack entanglemeng link, create link with its two neighbors on demand 
-                # for leftmost and rightmost nodes, only one choice of link to generate entanglement
-                # for middle nodes, first try left link, if already generated, try right link
-                # if already entanglement link(s), try swap
-
             if node.label in route:
+                left = node.neighbors_to_connect[0][0]
+                right = node.neighbors_to_connect[0][1]
 
-                raise NotImplementedError
+                # determine if the node is the origin node of the route
+                if node == origin_node:
+                    # if there is no entanglement link between it and its right neighbor, create it on demand
+                    if node.entanglement_link_nums[right.label] == 0:
+                        node.create_link(time, right)
+
+                # determine if the node is the destination node of the route
+                elif node == destination_node:
+                    # if there is no entanglement link between it and its left neighbor, create it on demand
+                    if node.entanglement_link_nums[left.label] == 0:
+                        node.create_link(time, left)
+
+                # otherwise the node is in the middle of the route
+                else:
+                    # if there is no entanglement link between it and its left neighbor, create it on demand
+                    if node.entanglement_link_nums[left.label] == 0:
+                        node.create_link(time, left)
+                    
+                    # if there is no entanglement link between it and its right neighbor, create it on demand
+                    elif node.entanglement_link_nums[right.label] == 0:
+                        node.create_link(time, right)
+
+                    # if both sides have entanglement links, try swapping
+                    else:
+                        # there can be multiple links and choose only one at a time
+                        for memory in node.memories:
+                            if memory.entangled_memory["node"] == left:
+                                left_memory = memory
+                                return
+                        for memory in node.memories:
+                            if memory.entangled_memory["node"] == right:
+                                right_memory = memory
+                                return
+                        
+                        node.swap(left_memory, right_memory)
+
             else:
                 node.create_random_link(time)
+
+        # determine if the desired entanglement is established
+        for memory in origin_node.memories:
+            if memory.entangled_memory["node"] == destination_node:
+                requests_toserve[0].is_completed = True
 
         if requests_toserve[0].is_completed:
             # record latency and completion time
@@ -90,12 +128,10 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             latencies.append(latency)
             request_complete_times.append(time)
 
-            # clean next_neighbor information for nodes in current route
+            # clean neighbors_to_connect information for nodes in current route
             for i in range(len(route)-1):
                 idx = route[i]
-                nodes[idx].next_neighbors.pop(0)
-
-            pass
+                nodes[idx].neighbors_to_connect.pop(0)
 
         congestion.append(len(requests_toserve))
 

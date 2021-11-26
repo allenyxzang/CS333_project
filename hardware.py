@@ -123,15 +123,15 @@ class Node:
 
         memo1 = memory1.entangled_memory["memo"]
         memo2 = memory2.entangled_memory["memo"]
-        node1 = memory1.entangled_memory["memo"]
-        node2 = memory2.entangled_memory["memo"]
+        node1 = memory1.entangled_memory["node"]
+        node2 = memory2.entangled_memory["node"]
 
         if self.rng.random() > self.swap_success_prob:
             # entanglement connection
-            memo1.entangled_memory["memo"].entangled_memory["node"] = node2
-            memo2.entangled_memory["memo"].entangled_memory["node"] = node1
-            memo1.entangled_memory["memo"].entangled_memory["memo"] = memo2
-            memo2.entangled_memory["memo"].entangled_memory["memo"] = memo1
+            memo1.entangled_memory["node"] = node2
+            memo2.entangled_memory["node"] = node1
+            memo1.entangled_memory["memo"] = memo2
+            memo2.entangled_memory["memo"] = memo1
 
             # entanglement reset
             self.memo_expire(memory1)
