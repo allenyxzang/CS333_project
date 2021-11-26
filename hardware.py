@@ -17,6 +17,7 @@ class Node:
         entanglement_link_nums (Dict[int, int]): keeps track of numbers of entanglement links with direct neighbors (for path finding alg.)
         reserved_memories (int): number of memories reserved on the node.
         _next_avail_memory (int): index (in self.memories) of next memory that may be reserved.
+        neighbors_to_connect (List[tuple]): list of left and right neighbors in route for entanglement connection
     """
 
     def __init__(self, label, neighbors, memo_size, lifetime,
@@ -26,6 +27,7 @@ class Node:
         self.memo_size = memo_size
         self.memories = []
         self.entanglement_link_nums = {n.label: 0 for n in neighbors}
+        self.neighbors_to_connect = []
 
         self.reserved_memories = 0
         self._next_avail_memory = 0
@@ -93,6 +95,7 @@ class Node:
             return
 
         # reserve a local memory and a memory on the other node to entangle
+        # Note: it is possible that when generating entanglement on demand, no memory is available for reservation
         local_memo = self.memo_reserve()
         if local_memo is None:
             return

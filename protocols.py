@@ -110,7 +110,8 @@ class Request:
     Attributes:
         start_time (int): time to submit the request
         pair (Tuple[int, int]): keeps track of labels of origin and destination nodes of the request
-        completed (Bool): Boolean to keep track if the request has been completed
+        is_completed (Bool): Boolean to keep track if the request has been completed
+        route (List[int]): route of nodes for entanglement connection to complete the request
     """
 
     def __init__(self, start_time, pair):
@@ -123,7 +124,8 @@ class Request:
 
         self.start_time = start_time
         self.pair = pair
-        self.completed = False
+        self.is_completed = False
+        self.route = None
 
     def get_path(self, network, nodes):
         """Get optimal path to service request.
