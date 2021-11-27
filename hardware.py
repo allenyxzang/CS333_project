@@ -18,6 +18,7 @@ class Node:
         reserved_memories (int): number of memories reserved on the node.
         _next_avail_memory (int): index (in self.memories) of next memory that may be reserved.
         neighbors_to_connect (List[tuple]): list of left and right neighbors in route for entanglement connection
+        generation_protocol (GenerationProtocol): entanglement generation protocol attached to the node
     """
 
     def __init__(self, label, neighbors, memo_size, lifetime,
@@ -32,7 +33,7 @@ class Node:
             gen_success_prob (float): success probability of entanglement generation between 0 and 1
             swap_success_prob (float): success probability of entanglement swapping between 0 and 1
             adapt_param (float): parameter for adaptive protocol
-            seed: seed for random number generators
+            seed: seed for random number generators (default 0)
         """
 
         self.label = label

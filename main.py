@@ -64,8 +64,25 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 two_neighbors = (left, right)
                 nodes[idx].neighbors_to_connect.append(two_neighbors)
 
-            # TODO: adaptively update probability distribution when a request is submitted to the network
-            # TODO: record available links, to be used links, to be generated links for visualization
+            # adaptively update probability distribution when a request is submitted to the network
+            for node in nodes:
+                links_available = []
+                links_used = []
+                if node.label in route:
+                    for idx in node.entanglement_link_nums.keys():
+                        # determine if entanglement links are available
+                        if node.entanglement_link_nums[idx] > 0:
+                            links_available.append(idx)
+                            # determine if the available entanglement links are in the route of the newest request (used link)
+                            if idx in node.neighbors_to_connect[-1]:
+                                links_used.append(idx)
+                else:
+                    for idx in node.entanglement_link_nums.keys():
+                        # determine if entanglement links are available, and no links will be used since not in route
+                        if node.entanglement_link_nums[idx] > 0:
+                            links_available.append(idx)
+
+                node.generation_protocol.update_dist(links_available, links_used)
         
         route = requests_toserve[0].route
         origin_node = nodes[route[0]]
@@ -132,6 +149,8 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             for i in range(len(route)-1):
                 idx = route[i]
                 nodes[idx].neighbors_to_connect.pop(0)
+
+            # TODO: record available links, to be used links, to be generated links after completing a request for visualization
 
         congestion.append(len(requests_toserve))
 
