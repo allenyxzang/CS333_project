@@ -22,6 +22,19 @@ class Node:
 
     def __init__(self, label, neighbors, memo_size, lifetime,
                  gen_success_prob, swap_success_prob, adapt_param, seed=0):
+        """Constructor of a node instance.
+
+        Args:
+            label (int): integer to label the node, corresponding to the indices of traffic matrix and requests
+            neighbors (List[Node]): list of neighboring nodes
+            memo_size (int): number of quantum memories in the node, assuming memories are of the same type
+            lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
+            gen_success_prob (float): success probability of entanglement generation between 0 and 1
+            swap_success_prob (float): success probability of entanglement swapping between 0 and 1
+            adapt_param (float): parameter for adaptive protocol
+            seed: seed for random number generators
+        """
+
         self.label = label
         self.neighbors = neighbors
         self.memo_size = memo_size

@@ -8,7 +8,7 @@ class GenerationProtocol:
     """
 
     def __init__(self, node, adapt_param):
-        """
+        """Constructor of entanglement generation protocol instance.
 
         Args:
             node (Node):
