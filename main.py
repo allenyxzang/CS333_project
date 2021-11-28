@@ -215,6 +215,3 @@ if __name__ == "__main__":
         # Run simulation
         res = run_simulation(graph_arr, nodes, request_stack, END_TIME)
 
-# TODO: request methods
-
-# TODO: network topology, etc.
