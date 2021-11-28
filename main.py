@@ -29,15 +29,15 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
 
     # metrics
     latencies = []  # keep track of latencies for each request to get completed
-    congestion = []  # keep track of number of incompleted requests at the end of each time step
+    congestion = []  # keep track of number of incomplete requests at the end of each time step
     request_complete_times = []  # keep track of when each request is completed
-    entanglement_available = []  # keep track of entanglement links stemming from route nodes when a request is submitted
-    entanglement_ondemand = []  # keep track of entanglement links generated on demand to complete a request
-    entanglement_usage_pattern = {"available":[], "ondemand":[]}  # keep track of entanglement usage pattern for every request
+    entanglement_usage_pattern = {"available": [], "ondemand": []}  # keep track of entanglement usage pattern for every request
 
+    requests_to_serve = []  # keep track of incomplete requests, in case new request comes in before previous request is completed
+    entanglement_available = []  # keep track of entanglement links from route nodes when a request is submitted
+    entanglement_ondemand = []  # keep track of entanglement links generated on demand to complete a request
     # get first request
     request = request_stack.pop(0)
-    requests_to_serve = []  # keep track of incompleted requests, in case new request comes in before previous request is completed
 
     while time < end_time:
         # determine if a new request is submitted to the network
@@ -178,8 +178,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
         time += 1
 
     # average latencies (over time) and return
-
-    raise NotImplementedError
+    return [latencies, congestion, request_complete_times, entanglement_usage_pattern]
 
 
 if __name__ == "__main__":
@@ -207,7 +206,7 @@ if __name__ == "__main__":
     for trial in range(NUM_TRIALS):
         # Generate request node pair queue
         pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, 30, rng, rng)
-        # Generate request submssion time list with constant interval
+        # Generate request submission time list with constant interval
         time_list = gen_request_time_list(10, 30, interval=15)
         # Generate request stack
         request_stack = [Request(time, pair) for time, pair in zip(time_list, pair_queue)]

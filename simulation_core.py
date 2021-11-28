@@ -3,7 +3,6 @@ import networkx as nx
 import numpy as np
 
 
-# TODO: network topology in JSON
 def gen_network_json(filename, size, net_type, seed=0):
     if net_type == "ring":
         arr = np.ndarray((size, size), int)
@@ -52,8 +51,10 @@ def gen_pair_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
 
 
 def gen_request_time_list(start_time, num_request, interval=10):
-    """Function to generate a list of times at each of which a request starts to get served, in order to mimic a central request controller.
-    Time interval between adjacent request is constant."""
+    """Function to generate a list of times when a request starts to get served.
+    This mimics a central request controller.
+    The time interval between adjacent request is constant.
+    """
 
     request_time_list = [start_time]
     for i in range(num_request - 1):
@@ -63,8 +64,11 @@ def gen_request_time_list(start_time, num_request, interval=10):
 
 
 def gen_request_time_list_rand(start_time, num_request, rng, lower_bound=1, upper_bound=10):
-    """Function to generate a list of times at each of which a request starts to get served, in order to mimic a central request controller.
-    Time interval between adjacent requests is a random integer. Can modify this function to change the distribution."""
+    """Function to generate a list of times when a request starts to get served.
+    This mimics a central request controller.
+    The time interval between adjacent requests is a random integer.
+    This function may be modified to change the distribution.
+    """
 
     request_time_list = [start_time]
     for i in range(num_request - 1):
