@@ -92,11 +92,21 @@ class Node:
             self._next_avail_memory = idx
 
     def memo_expire(self, memory):
+        # avoid infinite loop
+        if memory is None:
+            return 
+        if memory.reserved == False:
+            return
+
         other_node = memory.entangled_memory["node"]
         if other_node in self.neighbors:
             self.entanglement_link_nums[other_node.label] -= 1
         memory.expire()
         self.memo_free(memory)
+
+        # other_node also invoke memo_expire because memories only store entanglement with its pair and should expire simultaneously
+        other_memory = memory.entangled_memory["memo"]
+        other_node.memo_expire(other_memory)
 
     def create_random_link(self, time):
         neighbor_label = self.generation_protocol.choose_link()
@@ -124,6 +134,8 @@ class Node:
         # record entanglement
         if other_node in self.neighbors:
             self.entanglement_link_nums[other_node.label] += 1
+            # the other node should also update its entanglement link information
+            other_node.entanglement_link_nums[self.label] += 1
 
     def swap(self, memory1, memory2):
         """Method to do entanglement swapping.
@@ -134,6 +146,9 @@ class Node:
 
         Return the result of swapping (successful or not).
         """
+
+        if memory1.reserved or memory2.reserved is False:
+            return
 
         memo1 = memory1.entangled_memory["memo"]
         memo2 = memory2.entangled_memory["memo"]
@@ -193,6 +208,8 @@ class Memory:
 
     def entangle(self, memory, time):
         self.entangled_memory = {"node": memory.owner, "memo": memory, "expire_time": time + self.lifetime}
+        # the other memory should also update its entanglement information
+        memory.entangled_memory = {"node": self.owner, "memo": self, "expire_time": time + memory.lifetime}
 
     def set_owner(self, node):
         self.owner = node
