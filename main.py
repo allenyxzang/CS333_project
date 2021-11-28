@@ -26,8 +26,7 @@ QUEUE_LEN = 100
 
 def run_simulation(graph_arr, nodes, request_stack, end_time):
     time = 0
-    request_time = 0  # TODO: request class
-    # request_completed = False  # TODO: request class
+    request_time = 0
     requests_toserve = [] # keep track of incompleted requests, in case new request comes in before previous request is completed
     latencies = [] # keep track of latencies for each request to get completed
     congestion = [] # keep track of number of incompleted requests at the end of each time step
@@ -213,6 +212,3 @@ if __name__ == "__main__":
         # Run simulation
         res = run_simulation(graph_arr, nodes, request_stack, END_TIME)
 
-# TODO: request methods
-
-# TODO: network topology, etc.
