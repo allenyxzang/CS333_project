@@ -61,56 +61,12 @@ class GenerationProtocol:
         return self.node.rng.choice(self.prob_dist.keys(), self.prob_dist.values())
 
 
-class RequestStack:
-    """Class of the request stack to be served.
-
-    The sequence of feeding requests into the network is determined by the request time list.
-
-    Attributes:
-        time_list (List[int]): list of times to submit individual requests
-        pair_queue (List[Tuple[int,int]]): queue of request node pairs for entanglement generation
-        requests (List[Request]): list of request instances in order of start time
-    """
-
-    def __init__(self, time_list, pair_queue):
-        """Constructor of request stack instance.
-
-        Args:
-            time_list (List[int]): list of times to submit individual requests
-            pair_queue (List[Tuple[int,int]]): queue of request node pairs for entanglement generation
-        """
-
-        assert len(time_list) == len(pair_queue), "Time list and request queue shapes incompatible."
-        self.time_list = time_list
-        self.pair_queue = pair_queue
-        self.requests = []
-
-        for i in range(len(time_list)):
-            start_time = self.time_list[i]
-            pair = self.pair_queue[i]
-            request = Request(start_time, pair)
-            self.requests.append(request)
-
-    def pop(self):
-        """Method to remove the submitted request from the stack.
-
-        Return most updated request and its request time.
-        """
-
-        request_time = self.time_list.pop(0)
-        pair = self.pair_queue.pop(0)
-        request = self.requests.pop(0)
-
-        return request_time, pair, request
-
-
 class Request:
     """Class representing single requests for generating entanglement between two nodes.
 
     Attributes:
         start_time (int): time to submit the request
         pair (Tuple[int, int]): keeps track of labels of origin and destination nodes of the request
-        is_completed (Bool): Boolean to keep track if the request has been completed
         route (List[int]): route of nodes for entanglement connection to complete the request
     """
 
@@ -124,7 +80,6 @@ class Request:
 
         self.start_time = start_time
         self.pair = pair
-        self.is_completed = False
         self.route = None
 
     def get_path(self, network, nodes):
