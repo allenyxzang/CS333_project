@@ -32,6 +32,9 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
     latencies = [] # keep track of latencies for each request to get completed
     congestion = [] # keep track of number of incompleted requests at the end of each time step
     request_complete_times = [] # keep track of when each request is completed
+    entanglement_available = [] # keep track of entanglement links stemming from route nodes when a request is submitted
+    entanglement_ondemand = [] # keep track of entanglement links generated on demand to complete a request
+    entanglement_usage_pattern = {"available":[], "ondemand":[]} # keep track of entanglement usage pattern for every request
 
     while time < end_time:
         # determine if a new request is submitted to the network
@@ -73,6 +76,9 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                         # determine if entanglement links are available
                         if node.entanglement_link_nums[idx] > 0:
                             links_available.append(idx)
+                            # entanglement links available for nodes in the route for this request
+                            links = [(node.label, idx)] * node.entanglement_link_nums[idx]
+                            entanglement_available.extend(links)
                             # determine if the available entanglement links are in the route of the newest request (used link)
                             if idx in node.neighbors_to_connect[-1]:
                                 links_used.append(idx)
@@ -82,8 +88,13 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                         if node.entanglement_link_nums[idx] > 0:
                             links_available.append(idx)
 
+                # record entanglement links available beforehand (stemming from nodes in route) and reset entanglement_available
+                entanglement_usage_pattern["available"].append(entanglement_available)
+                entanglement_available = []
+
                 node.generation_protocol.update_dist(links_available, links_used)
         
+        # serve only the first request in queue at a time
         route = requests_toserve[0].route
         origin_node = nodes[route[0]]
         destination_node = nodes[route[-1]]
@@ -92,39 +103,45 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
         for node in nodes:
             if node.label in route:
                 left = node.neighbors_to_connect[0][0]
+                left_node = nodes[left]
                 right = node.neighbors_to_connect[0][1]
+                right_node = nodes[right]
 
                 # determine if the node is the origin node of the route
                 if node == origin_node:
                     # if there is no entanglement link between it and its right neighbor, create it on demand
-                    if node.entanglement_link_nums[right.label] == 0:
-                        node.create_link(time, right)
+                    if node.entanglement_link_nums[right] == 0:
+                        node.create_link(time, right_node)
+                        entanglement_ondemand.append((node.label, right))
 
                 # determine if the node is the destination node of the route
                 elif node == destination_node:
                     # if there is no entanglement link between it and its left neighbor, create it on demand
-                    if node.entanglement_link_nums[left.label] == 0:
-                        node.create_link(time, left)
+                    if node.entanglement_link_nums[left] == 0:
+                        node.create_link(time, left_node)
+                        entanglement_ondemand.append((left, node.label))
 
                 # otherwise the node is in the middle of the route
                 else:
                     # if there is no entanglement link between it and its left neighbor, create it on demand
-                    if node.entanglement_link_nums[left.label] == 0:
-                        node.create_link(time, left)
+                    if node.entanglement_link_nums[left] == 0:
+                        node.create_link(time, left_node)
+                        entanglement_ondemand.append((left, node.label))
                     
                     # if there is no entanglement link between it and its right neighbor, create it on demand
-                    elif node.entanglement_link_nums[right.label] == 0:
-                        node.create_link(time, right)
+                    elif node.entanglement_link_nums[right] == 0:
+                        node.create_link(time, right_node)
+                        entanglement_ondemand.append((node.label, right))
 
                     # if both sides have entanglement links, try swapping
                     else:
                         # there can be multiple links and choose only one at a time
                         for memory in node.memories:
-                            if memory.entangled_memory["node"] == left:
+                            if memory.entangled_memory["node"] == left_node:
                                 left_memory = memory
                                 return
                         for memory in node.memories:
-                            if memory.entangled_memory["node"] == right:
+                            if memory.entangled_memory["node"] == right_node:
                                 right_memory = memory
                                 return
                         
@@ -150,7 +167,9 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 idx = route[i]
                 nodes[idx].neighbors_to_connect.pop(0)
 
-            # TODO: record available links, to be used links, to be generated links after completing a request for visualization
+            # record entanglement links generated on demand and reset entanglement_ondemand
+            entanglement_usage_pattern["ondemand"].append(entanglement_ondemand)
+            entanglement_ondemand = []
 
         congestion.append(len(requests_toserve))
 

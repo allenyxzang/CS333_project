@@ -17,7 +17,7 @@ class Node:
         entanglement_link_nums (Dict[int, int]): keeps track of numbers of entanglement links with direct neighbors (for path finding alg.)
         reserved_memories (int): number of memories reserved on the node.
         _next_avail_memory (int): index (in self.memories) of next memory that may be reserved.
-        neighbors_to_connect (List[tuple]): list of left and right neighbors in route for entanglement connection
+        neighbors_to_connect (List[tuple]): list of left and right neighbors' indices in route for entanglement connection
         generation_protocol (GenerationProtocol): entanglement generation protocol attached to the node
     """
 
