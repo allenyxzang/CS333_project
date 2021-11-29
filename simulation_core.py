@@ -17,15 +17,15 @@ def gen_network_json(filename, size, net_type, seed=0):
     else:
         raise ValueError("Unknown graph type " + net_type)
 
-    fh = open(filename)
-    topo = {"array": arr}
+    fh = open(filename, 'w')
+    topo = {"array": arr.tolist()}
     json.dump(topo, fh)
     return arr
 
 
 # generator of traffic matrix 
 def gen_traffic_mtx(node_num, rng):
-    mtx = rng.random.rand(node_num, node_num)
+    mtx = rng.normal(size=(node_num, node_num))
     for i in range(node_num):
         mtx[i, i] = 0  # no self-to-self traffic
 
@@ -38,8 +38,8 @@ def gen_pair_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
     idx = 0
     while idx < queue_len:
         # random selection of traffic matrix element for judgement
-        rand_row = rng_mtx.random.randint(node_num)
-        rand_col = rng_mtx.random.randint(node_num)
+        rand_row = rng_mtx.integers(node_num)
+        rand_col = rng_mtx.integers(node_num)
 
         if rng_judge.random() < traffic_mtx[rand_row, rand_col]:
             # request node pair in form of two-element tuple
@@ -56,10 +56,7 @@ def gen_request_time_list(start_time, num_request, interval=10):
     The time interval between adjacent request is constant.
     """
 
-    request_time_list = [start_time]
-    for i in range(num_request - 1):
-        request_time_list.append(request_time_list[-1] + interval)
-
+    request_time_list = np.arange(start_time, num_request*interval + start_time, step=interval)
     return request_time_list
 
 

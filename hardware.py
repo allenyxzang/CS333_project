@@ -21,13 +21,12 @@ class Node:
         generation_protocol (GenerationProtocol): entanglement generation protocol attached to the node
     """
 
-    def __init__(self, label, neighbors, memo_size, lifetime,
+    def __init__(self, label, memo_size, lifetime,
                  gen_success_prob, swap_success_prob, adapt_param, seed=0):
         """Constructor of a node instance.
 
         Args:
             label (int): integer to label the node, corresponding to the indices of traffic matrix and requests
-            neighbors (List[Node]): list of neighboring nodes
             memo_size (int): number of quantum memories in the node, assuming memories are of the same type
             lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
             gen_success_prob (float): success probability of entanglement generation between 0 and 1
@@ -37,11 +36,13 @@ class Node:
         """
 
         self.label = label
-        self.neighbors = neighbors
+        self.neighbors = []
         self.memo_size = memo_size
         self.memories = []
-        self.entanglement_link_nums = {n.label: 0 for n in neighbors}
+        self.entanglement_link_nums = {}
         self.neighbors_to_connect = []
+        self.adapt_param = adapt_param
+        self.generation_protocol = None
 
         self.reserved_memories = 0
         self._next_avail_memory = 0
@@ -52,13 +53,16 @@ class Node:
             memory.set_owner(self)
             self.memories.append(memory)
 
-        # create protocol
-        self.generation_protocol = GenerationProtocol(self, adapt_param)
-
         # create rng and store params
         self.rng = default_rng(seed)
         self.gen_success_prob = gen_success_prob
         self.swap_success_prob = swap_success_prob
+
+    def set_neighbors(self, neighbors):
+        self.neighbors = neighbors
+        self.entanglement_link_nums = {n.label: 0 for n in neighbors}
+        # create protocol
+        self.generation_protocol = GenerationProtocol(self, self.adapt_param)
 
     def memo_reserve(self):
         """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories.
@@ -70,6 +74,7 @@ class Node:
         if self._next_avail_memory >= self.memo_size:
             return None
         memory = self.memories[self._next_avail_memory]
+        memory.reserved = True
 
         self._next_avail_memory += 1
         while self._next_avail_memory < self.memo_size:

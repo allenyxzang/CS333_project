@@ -19,9 +19,11 @@ ADAPT_WEIGHT = 0.5
 
 # Simulation parameters
 SIM_SEED = 0
-END_TIME = 100
-NUM_TRIALS = 100
+END_TIME = 10000
+NUM_TRIALS = 1
 QUEUE_LEN = 100
+QUEUE_START = 10
+QUEUE_INT = 15
 
 
 def run_simulation(graph_arr, nodes, request_stack, end_time):
@@ -119,7 +121,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 if node == origin_node:
                     # if there is no entanglement link between it and its right neighbor, create it on demand
                     if node.entanglement_link_nums[right] == 0:
-                        node.create_link(time, right_node)
+                        node.create_link(time, right_node, nodes)
                         entanglement_ondemand.append((node.label, right))
 
                 # determine if the node is the destination node of the route
@@ -198,26 +200,31 @@ if __name__ == "__main__":
     else:
         fh = open(CONFIG)
         topo = json.load(fh)
-        graph_arr = topo["array"]
+        graph_arr = np.ndarray(topo["array"])
         assert graph_arr.shape == (NET_SIZE, NET_SIZE)
     nodes = []
     for i in range(NET_SIZE):
-        neighbors = [j for j, element in enumerate(graph_arr[i]) if element != 0]
-        node = Node(i, neighbors, MEMO_SIZE, MEMO_LIFETIME,
+        node = Node(i, MEMO_SIZE, MEMO_LIFETIME,
                     ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, ADAPT_WEIGHT, i)
         nodes.append(node)
+    for i in range(NET_SIZE):
+        node = nodes[i]
+        neighbors = [nodes[j] for j, element in enumerate(graph_arr[i]) if element != 0]
+        node.set_neighbors(neighbors)
 
     # Generate traffic matrix
     traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
 
     for trial in range(NUM_TRIALS):
         # Generate request node pair queue
-        pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, 30, rng, rng)
+        pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
         # Generate request submission time list with constant interval
-        time_list = gen_request_time_list(10, 30, interval=15)
+        time_list = gen_request_time_list(QUEUE_START, QUEUE_LEN, interval=QUEUE_INT)
         # Generate request stack
         request_stack = [Request(time, pair) for time, pair in zip(time_list, pair_queue)]
 
         # Run simulation
-        res = run_simulation(graph_arr, nodes, request_stack, END_TIME)
+        latencies, congestion, request_complete_times, entanglement_usage_pattern =\
+            run_simulation(graph_arr, nodes, request_stack, END_TIME)
+        print(latencies)
 

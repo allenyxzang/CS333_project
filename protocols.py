@@ -61,7 +61,9 @@ class GenerationProtocol:
             int: label of node chosen for entanglement
         """
 
-        return self.node.rng.choice(self.prob_dist.keys(), self.prob_dist.values())
+        choices = list(self.prob_dist.keys())
+        probs = list(self.prob_dist.values())
+        return self.node.rng.choice(choices, p=probs)
 
 
 class Request:
