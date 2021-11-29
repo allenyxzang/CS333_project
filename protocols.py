@@ -1,3 +1,6 @@
+from networkx import Graph, dijkstra_path
+
+
 class GenerationProtocol:
     """Class representing protocol to generate entanglement links.
 
@@ -95,4 +98,6 @@ class Request:
             List[int]: Optimal path as list of node labels.
         """
 
-        raise NotImplementedError
+        graph = Graph(network)
+        path = dijkstra_path(graph, self.pair[0], self.pair[1])
+        return path
