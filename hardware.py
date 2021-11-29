@@ -95,7 +95,7 @@ class Node:
         # avoid infinite loop
         if memory is None:
             return 
-        if memory.reserved == False:
+        if not memory.reserved:
             return
 
         other_node = memory.entangled_memory["node"]
@@ -104,7 +104,6 @@ class Node:
         memory.expire()
         self.memo_free(memory)
 
-        # other_node also invoke memo_expire because memories only store entanglement with its pair and should expire simultaneously
         other_memory = memory.entangled_memory["memo"]
         other_node.memo_expire(other_memory)
 
