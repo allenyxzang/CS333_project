@@ -121,7 +121,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 if node == origin_node:
                     # if there is no entanglement link between it and its right neighbor, create it on demand
                     if node.entanglement_link_nums[right] == 0:
-                        node.create_link(time, right_node, nodes)
+                        node.create_link(time, right_node)
                         entanglement_ondemand.append((node.label, right))
 
                 # determine if the node is the destination node of the route

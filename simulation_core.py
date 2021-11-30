@@ -25,7 +25,7 @@ def gen_network_json(filename, size, net_type, seed=0):
 
 # generator of traffic matrix 
 def gen_traffic_mtx(node_num, rng):
-    mtx = rng.normal(size=(node_num, node_num))
+    mtx = rng.random((node_num, node_num))
     for i in range(node_num):
         mtx[i, i] = 0  # no self-to-self traffic
 
