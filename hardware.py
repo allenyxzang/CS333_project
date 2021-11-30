@@ -231,4 +231,4 @@ class Memory:
             raise Exception("This memory is not reserved")
 
     def expire(self):
-        self.entangled_memory = {"node": None, "memo": None, "start_time": None}
+        self.entangled_memory = {"node": None, "memo": None, "expire_time": None}

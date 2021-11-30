@@ -43,16 +43,18 @@ class GenerationProtocol:
         not_used = set([n.label for n in self.node.neighbors]) - used
 
         # increase probability for links in T
-        sum_st = sum([self.prob_dist[i] for i in (S | T)])
-        new_prob_increase = (self.alpha/len(T)) * (1 - sum_st)
-        for t in T:
-            self.prob_dist[t] += new_prob_increase
+        if len(T) > 0:
+            sum_st = sum([self.prob_dist[i] for i in (S | T)])
+            new_prob_increase = (self.alpha/len(T)) * (1 - sum_st)
+            for t in T:
+                self.prob_dist[t] += new_prob_increase
 
         # decrease probability for links not in T or S
-        sum_st_new = sum([self.prob_dist[i] for i in used])
-        new_prob = (1 - sum_st_new) / len(not_used)
-        for i in not_used:
-            self.prob_dist[i] = new_prob
+        if len(not_used) > 0:
+            sum_st_new = sum([self.prob_dist[i] for i in used])
+            new_prob = (1 - sum_st_new) / len(not_used)
+            for i in not_used:
+                self.prob_dist[i] = new_prob
 
     def choose_link(self):
         """Method to choose a link to attempt entanglement.
