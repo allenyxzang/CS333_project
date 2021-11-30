@@ -105,11 +105,11 @@ class Node:
             return
 
         other_node = memory.entangled_memory["node"]
+        other_memory = memory.entangled_memory["memo"]
         self.entanglement_link_nums[other_node.label] -= 1
         memory.expire()
         self.memo_free(memory)
 
-        other_memory = memory.entangled_memory["memo"]
         other_node.memo_expire(other_memory)
 
     def create_random_link(self, time):
@@ -149,6 +149,9 @@ class Node:
 
         Return the result of swapping (successful or not).
         """
+
+        if memory1 is None or memory2 is None:
+            return
 
         if not memory1.reserved or not memory2.reserved:
             return

@@ -195,6 +195,8 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                                 break
                         
                         node.swap(left_memory, right_memory)
+                        left_memory = None
+                        right_memory = None
 
             else:
                 node.create_random_link(time)
