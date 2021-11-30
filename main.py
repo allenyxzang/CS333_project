@@ -47,7 +47,10 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             for memory in node.memories:
                 expire_time = memory.entangled_memory["expire_time"]
                 if expire_time is not None and expire_time == time:
+                    entangled_node = memory.entangled_memory["node"]
+                    entangled_memory = memory.entangled_memory["memo"]
                     node.memo_expire(memory)
+                    entangled_node.memo_expire(entangled_memory)
 
         # determine if a new request is submitted to the network
         if time == request.start_time:
