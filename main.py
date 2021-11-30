@@ -47,10 +47,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             for memory in node.memories:
                 expire_time = memory.entangled_memory["expire_time"]
                 if expire_time is not None and expire_time <= time:
-                    entangled_node = memory.entangled_memory["node"]
-                    entangled_memory = memory.entangled_memory["memo"]
                     node.memo_expire(memory)
-                    # entangled_node.memo_expire(entangled_memory)
 
         # determine if a new request is submitted to the network
         if time == request.start_time:
@@ -123,12 +120,20 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             origin_node = nodes[route[0]]
             destination_node = nodes[route[-1]]
         else:
+            origin_node = None
+            destination_node = None
             route = []
 
         # call function to run node (entanglement generation) protocol
         for node in nodes:
             n = node.label
+
             if n in route:
+                # get neighbor information in the path
+                direct_right = None
+                direct_right_node = None
+                direct_left = None
+                direct_left_node = None
                 left_neighbors = node.left_neighbors_to_connect[0]
                 if len(left_neighbors) > 0:
                     direct_left = left_neighbors[-1]
@@ -139,7 +144,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     direct_right_node = nodes[direct_right]
 
                 # determine if the node is the origin node of the route
-                if node == origin_node:
+                if node is origin_node:
                     # if there is no entanglement link between it and its right neighbors, create link with direct right neighbor on demand
                     right_entanglement_link_nums = [node.entanglement_link_nums[i] for i in right_neighbors]
                     if not any(right_entanglement_link_nums):
@@ -147,7 +152,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                         entanglement_ondemand.append((node.label, direct_right))
 
                 # determine if the node is the destination node of the route
-                elif node == destination_node:
+                elif node is destination_node:
                     # if there is no entanglement link between it and its left neighbors, create link with direct left neighbor on demand
                     left_entanglement_link_nums = [node.entanglement_link_nums[i] for i in left_neighbors]
                     if not any(left_entanglement_link_nums):
@@ -156,9 +161,10 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
 
                 # otherwise the node is in the middle of the route
                 else:
-                    # if there is no entanglement link between it and its left neighbors, create link with direct left neighbor on demand
                     left_entanglement_link_nums = [node.entanglement_link_nums[i] for i in left_neighbors]
                     right_entanglement_link_nums = [node.entanglement_link_nums[i] for i in right_neighbors]
+
+                    # if there is no entanglement link between it and its left neighbors, create link with direct left neighbor on demand
                     if not any(left_entanglement_link_nums):
                         node.create_link(time, direct_left_node)
                         entanglement_ondemand.append((direct_left, node.label))
@@ -174,17 +180,24 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                         # find leftmost and rightmost entangled nodes
                         leftmost = n
                         rightmost = n
-                        for i in range(len(left_neighbors)):
+                        right_reversed = list(reversed(right_neighbors))
+                        right_nums_reversed = list(reversed(right_entanglement_link_nums))
+                        for i, label in enumerate(left_neighbors):
                             if left_entanglement_link_nums[i] > 0:
-                                leftmost = left_neighbors[i]
-                        
-                        for i in reversed(range(len(right_neighbors))):
-                            if right_entanglement_link_nums[i] > 0:
-                                rightmost = right_neighbors[i]
+                                leftmost = label
+                                break
+                        for i, label in enumerate(right_reversed):
+                            if right_nums_reversed[i] > 0:
+                                rightmost = label
+                                break
+                        assert leftmost != n
+                        assert rightmost != n
 
                         leftmost_node = nodes[leftmost]
                         rightmost_node = nodes[rightmost]
 
+                        left_memory = None
+                        right_memory = None
                         for memory in node.memories:
                             if memory.entangled_memory["node"] == leftmost_node:
                                 left_memory = memory
@@ -193,10 +206,8 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                             if memory.entangled_memory["node"] == rightmost_node:
                                 right_memory = memory
                                 break
-                        
+
                         node.swap(left_memory, right_memory)
-                        left_memory = None
-                        right_memory = None
 
             else:
                 node.create_random_link(time)

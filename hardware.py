@@ -106,6 +106,7 @@ class Node:
 
         other_node = memory.entangled_memory["node"]
         other_memory = memory.entangled_memory["memo"]
+
         self.entanglement_link_nums[other_node.label] -= 1
         memory.expire()
         self.memo_free(memory)
@@ -150,8 +151,7 @@ class Node:
         Return the result of swapping (successful or not).
         """
 
-        if memory1 is None or memory2 is None:
-            return
+        assert memory1 in self.memories and memory2 in self.memories
 
         if not memory1.reserved or not memory2.reserved:
             return
@@ -161,11 +161,15 @@ class Node:
         node1 = memory1.entangled_memory["node"]
         node2 = memory2.entangled_memory["node"]
 
-        # memory expiration
-        self.memo_expire(memory1)
-        self.memo_expire(memory2)
-
         if self.rng.random() < self.swap_success_prob:
+            # reset local entanglement
+            memory1.expire()
+            memory2.expire()
+            self.memo_free(memory1)
+            self.memo_free(memory2)
+            self.entanglement_link_nums[node1.label] -= 1
+            self.entanglement_link_nums[node2.label] -= 1
+
             # entanglement connection, maintain same expiration time
             memo1.entangled_memory["node"] = node2
             memo2.entangled_memory["node"] = node1
@@ -173,6 +177,8 @@ class Node:
             memo2.entangled_memory["memo"] = memo1
 
             # update entanglement count
+            node1.entanglement_link_nums[self.label] -= 1
+            node2.entanglement_link_nums[self.label] -= 1
             node1.entanglement_link_nums[node2.label] += 1
             node2.entanglement_link_nums[node1.label] += 1
 
