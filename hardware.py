@@ -17,7 +17,8 @@ class Node:
         entanglement_link_nums (Dict[int, int]): keeps track of numbers of entanglement links with direct neighbors (for path finding alg.)
         reserved_memories (int): number of memories reserved on the node.
         _next_avail_memory (int): index (in self.memories) of next memory that may be reserved.
-        neighbors_to_connect (List[tuple]): list of left and right neighbors' indices in route for entanglement connection
+        left_neighbors_to_connect (List[tuple]): list of left neighbors' indices in route for entanglement connection
+        right_neighbors_to_connect (List[tuple]): list of right neighbors' indices in route for entanglement connection
         generation_protocol (GenerationProtocol): entanglement generation protocol attached to the node
     """
 
@@ -40,7 +41,8 @@ class Node:
         self.memo_size = memo_size
         self.memories = []
         self.entanglement_link_nums = {}
-        self.neighbors_to_connect = []
+        self.left_neighbors_to_connect = []
+        self.right_neighbors_to_connect = []
         self.adapt_param = adapt_param
         self.generation_protocol = None
 
@@ -60,7 +62,6 @@ class Node:
 
     def set_neighbors(self, neighbors):
         self.neighbors = neighbors
-        self.entanglement_link_nums = {n.label: 0 for n in neighbors}
         # create protocol
         self.generation_protocol = GenerationProtocol(self, self.adapt_param)
 
@@ -104,8 +105,7 @@ class Node:
             return
 
         other_node = memory.entangled_memory["node"]
-        if other_node in self.neighbors:
-            self.entanglement_link_nums[other_node.label] -= 1
+        self.entanglement_link_nums[other_node.label] -= 1
         memory.expire()
         self.memo_free(memory)
 
@@ -136,10 +136,9 @@ class Node:
         local_memo.entangle(other_memo, time)
 
         # record entanglement
-        if other_node in self.neighbors:
-            self.entanglement_link_nums[other_node.label] += 1
-            # the other node should also update its entanglement link information
-            other_node.entanglement_link_nums[self.label] += 1
+        self.entanglement_link_nums[other_node.label] += 1
+        # the other node should also update its entanglement link information
+        other_node.entanglement_link_nums[self.label] += 1
 
     def swap(self, memory1, memory2):
         """Method to do entanglement swapping.
