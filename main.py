@@ -69,16 +69,16 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             for i in range(len(route)):
                 idx = route[i]
                 if i == 0:
-                    left_neighbors_to_connect = ()
-                    right_neighbors_to_connect = (route[i+k+1] for k in range(len(route)-i))
+                    left_neighbors_to_connect = []
+                    right_neighbors_to_connect = [route[i+k+1] for k in range(len(route)-i-1)]
                     
                 elif i == len(route)-1:
-                    left_neighbors_to_connect = (route[k] for k in range(i))
-                    right_neighbors_to_connect = ()
+                    left_neighbors_to_connect = [route[k] for k in range(i)]
+                    right_neighbors_to_connect = []
 
                 else:
-                    left_neighbors_to_connect = (route[k] for k in range(i))
-                    right_neighbors_to_connect = (route[i+k+1] for k in range(len(route)-i))
+                    left_neighbors_to_connect = [route[k] for k in range(i)]
+                    right_neighbors_to_connect = [route[i+k+1] for k in range(len(route)-i-1)]
 
                 nodes[idx].left_neighbors_to_connect.append(left_neighbors_to_connect)
                 nodes[idx].right_neighbors_to_connect.append(right_neighbors_to_connect)
@@ -99,10 +99,17 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                         links = [(node.label, idx)] * node.entanglement_link_nums[idx]
                         entanglement_available.extend(links)
                         # determine if the available entanglement links are in the route of the request (a used link)
-                        left_idx = node.left_neighbors_to_connect[-1][-1]
-                        right_idx = node.right_neighbors_to_connect[-1][0]
-                        links_used.append(left_idx)
-                        links_used.append(right_idx)
+                        if node.label == route[0]:
+                            right_idx = node.right_neighbors_to_connect[-1][0]
+                            links_used.append(right_idx)
+                        elif node.label == route[-1]:
+                            left_idx = node.left_neighbors_to_connect[-1][-1]
+                            links_used.append(left_idx)
+                        else:
+                            left_idx = node.left_neighbors_to_connect[-1][-1]
+                            right_idx = node.right_neighbors_to_connect[-1][0]
+                            links_used.append(left_idx)
+                            links_used.append(right_idx)
 
                 # record entanglement links available (stemming from nodes in route) and reset entanglement_available
                 entanglement_usage_pattern["available"].append(entanglement_available)
@@ -128,7 +135,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     direct_left_node = nodes[direct_left]
                 right_neighbors = node.right_neighbors_to_connect[0]
                 if len(right_neighbors) > 0:
-                    direct_right = right_neighbors[0] if len(right_neighbors) > 0
+                    direct_right = right_neighbors[0]
                     direct_right_node = nodes[direct_right]
 
                 # determine if the node is the origin node of the route
@@ -158,7 +165,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     
                     # if there is no entanglement link between it and its right neighbors, create link with direct right neighbor on demand
                     elif not any(right_entanglement_link_nums):
-                        node.create_link(time, right_node)
+                        node.create_link(time, direct_right_node)
                         entanglement_ondemand.append((node.label, direct_right))
 
                     # if both sides have entanglement links, try swapping
@@ -247,7 +254,7 @@ if __name__ == "__main__":
         node = nodes[i]
         neighbors = [nodes[j] for j, element in enumerate(graph_arr[i]) if element != 0]
         node.set_neighbors(neighbors)
-        node.entanglement_link_nums = {n.label: 0 for n in range(NET_SIZE)}
+        node.entanglement_link_nums = {n: 0 for n in range(NET_SIZE)}
 
     # Generate traffic matrix
     traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
