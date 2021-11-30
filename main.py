@@ -46,11 +46,11 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
         for node in nodes:
             for memory in node.memories:
                 expire_time = memory.entangled_memory["expire_time"]
-                if expire_time is not None and expire_time == time:
+                if expire_time is not None and expire_time <= time:
                     entangled_node = memory.entangled_memory["node"]
                     entangled_memory = memory.entangled_memory["memo"]
                     node.memo_expire(memory)
-                    entangled_node.memo_expire(entangled_memory)
+                    # entangled_node.memo_expire(entangled_memory)
 
         # determine if a new request is submitted to the network
         if time == request.start_time:
@@ -218,6 +218,9 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     # record entanglement links generated on demand and reset entanglement_ondemand
                     entanglement_usage_pattern["ondemand"].append(entanglement_ondemand)
                     entanglement_ondemand = []
+
+                    # expire memories
+                    origin_node.memo_expire(memory)
 
                     break
 
