@@ -176,9 +176,8 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     request_complete_times.append(time)
 
                     # clean neighbors_to_connect information for nodes in current route
-                    for i in range(len(route)-1):
-                        idx = route[i]
-                        nodes[idx].neighbors_to_connect.pop(0)
+                    for node_label in route:
+                        nodes[node_label].neighbors_to_connect.pop(0)
 
                     # record entanglement links generated on demand and reset entanglement_ondemand
                     entanglement_usage_pattern["ondemand"].append(entanglement_ondemand)
