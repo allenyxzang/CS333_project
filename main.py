@@ -6,12 +6,12 @@ from protocols import *
 # Network parameters
 CONFIG = "network.json"
 GENERATE_NEW = True
-NET_SIZE = 100
+NET_SIZE = 10
 NET_TYPE = "as_net"
 SEED = 0
 
 # Node parameters
-MEMO_SIZE = 1
+MEMO_SIZE = 100
 MEMO_LIFETIME = 100  # in units of simulation time step
 ENTANGLEMENT_GEN_PROB = 0.01
 ENTANGLEMENT_SWAP_PROB = 1
@@ -57,6 +57,10 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             # find path and assign to route attribute
             route = request.get_path(graph_arr, nodes)
             request.route = route
+
+            # get new request
+            if len(request_stack) > 0:
+                request = request_stack.pop(0)
 
             # two neighbors to maintain entanglement as local information on each node in route
             for i in range(len(route)):
@@ -183,6 +187,10 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     break
 
         congestion.append(len(requests_to_serve))
+
+        # check if no more requests
+        if len(request_stack) == 0 and len(requests_to_serve) == 0:
+            break
 
         time += 1
 

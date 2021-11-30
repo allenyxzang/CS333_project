@@ -151,7 +151,7 @@ class Node:
         Return the result of swapping (successful or not).
         """
 
-        if memory1.reserved or memory2.reserved is False:
+        if not memory1.reserved or not memory2.reserved:
             return
 
         memo1 = memory1.entangled_memory["memo"]
@@ -159,7 +159,7 @@ class Node:
         node1 = memory1.entangled_memory["node"]
         node2 = memory2.entangled_memory["node"]
 
-        if self.rng.random() > self.swap_success_prob:
+        if self.rng.random() < self.swap_success_prob:
             # entanglement connection
             memo1.entangled_memory["node"] = node2
             memo2.entangled_memory["node"] = node1
