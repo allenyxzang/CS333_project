@@ -64,51 +64,32 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             if len(request_stack) > 0:
                 request = request_stack.pop(0)
 
-            # two neighbors to maintain entanglement as local information on each node in route
-            for i in range(len(route)):
-                idx = route[i]
-                if i == 0:
-                    left_neighbors_to_connect = []
-                    right_neighbors_to_connect = [route[i+k+1] for k in range(len(route)-i-1)]
-                    
-                elif i == len(route)-1:
-                    left_neighbors_to_connect = [route[k] for k in range(i)]
-                    right_neighbors_to_connect = []
-
-                else:
-                    left_neighbors_to_connect = [route[k] for k in range(i)]
-                    right_neighbors_to_connect = [route[i+k+1] for k in range(len(route)-i-1)]
-
-                nodes[idx].left_neighbors_to_connect.append(left_neighbors_to_connect)
-                nodes[idx].right_neighbors_to_connect.append(right_neighbors_to_connect)
-
+            # update node information on other nodes in path
             # adaptively update probability distribution when a request is submitted to the network
-            for node in nodes:
-                if node.label not in route:
-                    continue
+            for i, label in enumerate(route):
+                node = nodes[label]
+
+                left_neighbors_to_connect = route[0:i]
+                right_neighbors_to_connect = route[i:-1]
+                nodes[label].left_neighbors_to_connect.append(left_neighbors_to_connect)
+                nodes[label].right_neighbors_to_connect.append(right_neighbors_to_connect)
 
                 links_available = []
                 links_used = []
 
-                for idx in node.entanglement_link_nums.keys():
+                # get current links
+                for other_label in node.entanglement_link_nums.keys():
                     # determine if entanglement links are available
-                    if node.entanglement_link_nums[idx] > 0:
-                        links_available.append(idx)
+                    if node.entanglement_link_nums[other_label] > 0:
+                        links_available.append(other_label)
                         # entanglement links available for nodes in the route for this request
-                        links = [(node.label, idx)] * node.entanglement_link_nums[idx]
+                        links = [(label, other_label)] * node.entanglement_link_nums[other_label]
                         entanglement_available.extend(links)
-                        # determine if the available entanglement links are in the route of the request (a used link)
-                        if node.label == route[0]:
-                            right_idx = node.right_neighbors_to_connect[-1][0]
-                            links_used.append(right_idx)
-                        elif node.label == route[-1]:
-                            left_idx = node.left_neighbors_to_connect[-1][-1]
-                            links_used.append(left_idx)
-                        else:
-                            left_idx = node.left_neighbors_to_connect[-1][-1]
-                            right_idx = node.right_neighbors_to_connect[-1][0]
-                            links_used.append(left_idx)
-                            links_used.append(right_idx)
+                # get links used for request
+                if i > 0:
+                    links_used.append(route[i-1])
+                if i < (len(route) - 1):
+                    links_used.append(route[i+1])
 
                 # record entanglement links available (stemming from nodes in route) and reset entanglement_available
                 entanglement_usage_pattern["available"].append(entanglement_available)
