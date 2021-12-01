@@ -319,8 +319,9 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 if memory.entangled_memory["node"] == destination_node:
                     # record latency and completion time
                     completed_request = requests_to_serve.pop(0)
-                    next_request = requests_to_serve[0]
-                    next_request.start_time = time
+                    if len(requests_to_serve) > 0:
+                        next_request = requests_to_serve[0]
+                        next_request.start_time = time
                     latency = time - completed_request.submit_time
                     serve_time = time - completed_request.start_time
                     latencies.append(latency)
