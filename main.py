@@ -31,6 +31,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
 
     # metrics
     latencies = []  # keep track of latencies for each request to get completed
+    serve_times = [] # keep track of times to serve each request
     congestion = []  # keep track of number of incomplete requests at the end of each time step
     request_complete_times = []  # keep track of when each request is completed
     entanglement_usage_pattern = {"available": [], "ondemand": []}  # keep track of entanglement usage pattern for every request
@@ -50,7 +51,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     node.memo_expire(memory)
 
         # determine if a new request is submitted to the network
-        if time == request.start_time:
+        if time == request.submit_time:
             # submit request
             requests_to_serve.append(request)
             
@@ -318,8 +319,12 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 if memory.entangled_memory["node"] == destination_node:
                     # record latency and completion time
                     completed_request = requests_to_serve.pop(0)
-                    latency = time - completed_request.start_time
+                    next_request = requests_to_serve[0]
+                    next_request.start_time = time
+                    latency = time - completed_request.submit_time
+                    serve_time = time - completed_request.start_time
                     latencies.append(latency)
+                    serve_times.append(serve_time)
                     request_complete_times.append(time)
 
                     # clean left and right neighbors_to_connect information for nodes in current route

@@ -72,20 +72,22 @@ class Request:
     """Class representing single requests for generating entanglement between two nodes.
 
     Attributes:
-        start_time (int): time to submit the request
+        submit_time (int): time to submit the request
+        start_time (int): time when the network starts to serve the request
         pair (Tuple[int, int]): keeps track of labels of origin and destination nodes of the request
         route (List[int]): route of nodes for entanglement connection to complete the request
     """
 
-    def __init__(self, start_time, pair):
+    def __init__(self, submit_time, pair):
         """Constructor of a request instance.
 
         Args:
-            start_time (int): time to submit the request
+            submit_time (int): time to submit the request
             pair (Tuple[int, int]): keeps track of labels of origin and destination nodes of the request
         """
 
-        self.start_time = start_time
+        self.submit_time = submit_time
+        self.start_time = submit_time # start time is no earlier than submit time
         self.pair = pair
         self.route = None
 
