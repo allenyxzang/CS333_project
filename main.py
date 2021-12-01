@@ -350,7 +350,7 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
         time += 1
 
     # average latencies (over time) and return
-    return [latencies, congestion, request_complete_times, entanglement_usage_pattern]
+    return [latencies, serve_times, congestion, request_complete_times, entanglement_usage_pattern]
 
 
 if __name__ == "__main__":
