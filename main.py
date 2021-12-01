@@ -1,9 +1,8 @@
-from numpy.random import default_rng
+from matplotlib import pyplot as plt
+
 from simulation_core import *
 from hardware import *
 from protocols import *
-from matplotlib import pyplot as plt
-import numpy as np
 
 # Network parameters
 CONFIG = "network.json"
@@ -222,26 +221,26 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 if memory.entangled_memory["node"] == destination_node:
                     # record latency and completion time
                     completed_request = requests_to_serve.pop(0)
-                    if len(requests_to_serve) > 0:
-                        next_request = requests_to_serve[0]
-                        next_request.start_time = time
                     latency = time - completed_request.submit_time
                     serve_time = time - completed_request.start_time
                     latencies.append(latency)
                     serve_times.append(serve_time)
                     request_complete_times.append(time)
+                    # record entanglement links generated on demand and reset entanglement_ondemand
+                    entanglement_usage_pattern["ondemand"].append(entanglement_ondemand)
+                    entanglement_ondemand = []
 
                     # clean left and right neighbors_to_connect information for nodes in current route
                     for node_label in route:
                         nodes[node_label].left_neighbors_to_connect.pop(0)
                         nodes[node_label].right_neighbors_to_connect.pop(0)
-
-                    # record entanglement links generated on demand and reset entanglement_ondemand
-                    entanglement_usage_pattern["ondemand"].append(entanglement_ondemand)
-                    entanglement_ondemand = []
-
                     # expire memories
                     origin_node.memo_expire(memory)
+
+                    # if waiting on any requests to serve, they will start at next time step
+                    if len(requests_to_serve) > 0:
+                        next_request = requests_to_serve[0]
+                        next_request.start_time = time + 1
 
                     break
 
@@ -289,7 +288,7 @@ if __name__ == "__main__":
     for trial in range(NUM_TRIALS):
         # Generate request node pair queue
         # pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
-        pair_queue = [(2,6) for i in range(QUEUE_LEN)] # a queue of identical requests
+        pair_queue = [(2, 6) for i in range(QUEUE_LEN)]  # a queue of identical requests
         # Generate request submission time list with constant interval
         time_list = gen_request_time_list(QUEUE_START, QUEUE_LEN, interval=QUEUE_INT)
         # Generate request stack
@@ -327,3 +326,5 @@ if __name__ == "__main__":
     ax2 = plt.subplot(122)
     ax2.plot(requests_serve_times, serve_times_avg)
     ax2.set_title("average times to serve requests")
+
+    plt.show()
