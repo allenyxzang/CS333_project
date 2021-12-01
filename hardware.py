@@ -119,9 +119,21 @@ class Node:
         self.create_link(time, neighbor)
 
     def create_link(self, time, other_node):
+        """Method to create an entanglement link with another node.
+
+        If creation fails, will return False.
+
+        Args:
+            time (int): time of link creation (from main simulation loop).
+            other_node (Node): node to generate entanglement with.
+
+        Returns:
+            bool: if creation succeeded (True) or failed (False).
+        """
+
         # check if entanglement succeeds
         if self.rng.random() > self.gen_success_prob:
-            return
+            return False
 
         # reserve a local memory and a memory on the other node to entangle
         # Note: it is possible that when generating entanglement on demand, no memory is available for reservation
@@ -142,6 +154,43 @@ class Node:
         other_node.entanglement_link_nums[self.label] += 1
 
         return True
+
+    def create_link_with_priority(self, time, other_node):
+        """Method to create an entanglement link with another node.
+
+        If there are no memories available on local or destination node, will randomly pick one to overwrite.
+        Entanglement may still fail due to random nature.
+
+        Args:
+            time (int): time of link creation (from main simulation loop).
+            other_node (Node): node to generate entanglement with.
+        """
+
+        # reserve a local memory and a memory on the other node to entangle
+        # If no memory is available, pick a random one
+        local_memo = self.memo_reserve()
+        if local_memo is None:
+            memo_id = self.rng.integers(self.memo_size)
+            self.memo_expire(self.memories[memo_id])
+            local_memo = self.memo_reserve()
+        other_memo = other_node.memo_reserve()
+        if other_memo is None:
+            memo_id = other_node.rng.integers(other_node.memo_size)
+            other_node.memo_expire(other_node.memories[memo_id])
+            other_memo = other_node.memo_reserve()
+
+        if self.rng.random() > self.gen_success_prob:
+            self.memo_free(local_memo)
+            other_node.memo_free(other_memo)
+            return
+
+        # entangle the two nodes
+        local_memo.entangle(other_memo, time)
+
+        # record entanglement
+        self.entanglement_link_nums[other_node.label] += 1
+        # the other node should also update its entanglement link information
+        other_node.entanglement_link_nums[self.label] += 1
 
     def swap(self, memory1, memory2):
         """Method to do entanglement swapping.
