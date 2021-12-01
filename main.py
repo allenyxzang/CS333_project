@@ -2,6 +2,8 @@ from numpy.random import default_rng
 from simulation_core import *
 from hardware import *
 from protocols import *
+from matplotlib import pyplot as plt
+import numpy as np
 
 # Network parameters
 CONFIG = "network.json"
@@ -20,7 +22,7 @@ ADAPT_WEIGHT = 0.5
 # Simulation parameters
 SIM_SEED = 0
 END_TIME = 10000
-NUM_TRIALS = 1
+NUM_TRIALS = 50
 QUEUE_LEN = 100
 QUEUE_START = 10
 QUEUE_INT = 15
@@ -380,9 +382,13 @@ if __name__ == "__main__":
     # Generate traffic matrix
     traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
 
+    latencies_list = []
+    serve_times_list = []
+
     for trial in range(NUM_TRIALS):
         # Generate request node pair queue
-        pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
+        # pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
+        pair_queue = [(2,6) for i in range(QUEUE_LEN)] # a queue of identical requests
         # Generate request submission time list with constant interval
         time_list = gen_request_time_list(QUEUE_START, QUEUE_LEN, interval=QUEUE_INT)
         # Generate request stack
@@ -391,5 +397,32 @@ if __name__ == "__main__":
         # Run simulation
         latencies, serve_times, congestion, request_complete_times, entanglement_usage_pattern =\
             run_simulation(graph_arr, nodes, request_stack, END_TIME)
-        print(latencies)
+        # print(latencies)
+        latencies_list.append(latencies)
+        serve_times_list.append(serve_times)
 
+    num_latencies = min([len(latencies_list[i]) for i in range(NUM_TRIALS)])
+    num_serve_times = min([len(serve_times_list[i]) for i in range(NUM_TRIALS)])
+    latencies_avg = np.zeros(num_latencies)
+    serve_times_avg = np.zeros(num_serve_times)
+
+    for i in range(NUM_TRIALS):
+        latencies_avg += np.array(latencies_list[i][:num_latencies])
+
+    for i in range(NUM_TRIALS):
+        serve_times_avg += np.array(serve_times_list[i][:num_latencies])
+
+    latencies_avg = latencies_avg / NUM_TRIALS
+    serve_times_avg = serve_times_avg / NUM_TRIALS
+            
+    # visualization
+    requests_latencies = np.arange(num_latencies)
+    requests_serve_times = np.arange(num_serve_times)
+        
+    ax1 = plt.subplot(121)
+    ax1.plot(requests_latencies, latencies_avg)
+    ax1.set_title("average request latencies")
+    
+    ax2 = plt.subplot(122)
+    ax2.plot(requests_serve_times, serve_times_avg)
+    ax2.set_title("average times to serve requests")
