@@ -388,7 +388,7 @@ if __name__ == "__main__":
         request_stack = [Request(time, pair) for time, pair in zip(time_list, pair_queue)]
 
         # Run simulation
-        latencies, congestion, request_complete_times, entanglement_usage_pattern =\
+        latencies, serve_times, congestion, request_complete_times, entanglement_usage_pattern =\
             run_simulation(graph_arr, nodes, request_stack, END_TIME)
         print(latencies)
 
