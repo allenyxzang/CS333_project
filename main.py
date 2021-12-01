@@ -145,34 +145,133 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
 
                 # determine if the node is the origin node of the route
                 if node is origin_node:
-                    # if there is no entanglement link between it and its right neighbors, create link with direct right neighbor on demand
                     right_entanglement_link_nums = [node.entanglement_link_nums[i] for i in right_neighbors]
+                    # if there is no entanglement link between it and its right neighbors, create link with direct right neighbor on demand
                     if not any(right_entanglement_link_nums):
-                        node.create_link(time, direct_right_node)
-                        entanglement_ondemand.append((node.label, direct_right))
+                        gen_success = node.create_link(time, direct_right_node)
+                        # if no available memories, randomly choose memories to expire and redo entanglement generation
+                        if gen_success == False:
+                            left_reserved_status = [memory.reserved for memory in node.memories]
+                            right_reserved_status = [memory.reserved for memory in direct_right_node.memories]
+                            if not any(left_reserved_status) and any(right_reserved_status):
+                                rand_idx_left = node.rng.integers(low=0, high=len(node.memoies)-1)
+                                node.memo_expire(node.memories[rand_idx_left])
+                                retry_gen_success = node.create_link(time, direct_right_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((node.label, direct_right))
+                            elif any(left_reserved_status) and not any(right_reserved_status):
+                                rand_idx_right = direct_right_node.rng.integers(low=0, high=len(direct_right_node.memoies)-1)
+                                direct_right_node.memo_expire(direct_right_node.memories[rand_idx_right])
+                                retry_gen_success = node.create_link(time, direct_right_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((node.label, direct_right))
+                            elif not any(left_reserved_status) and not any(right_reserved_status):
+                                rand_idx_left = node.rng.integers(low=0, high=len(node.memoies)-1)
+                                rand_idx_right = direct_right_node.rng.integers(low=0, high=len(direct_right_node.memoies)-1)
+                                node.memo_expire(node.memories[rand_idx_left])
+                                direct_right_node.memo_expire(direct_right_node.memories[rand_idx_right])
+                                retry_gen_success = node.create_link(time, direct_right_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((node.label, direct_right))
+                        elif gen_success == True:
+                            entanglement_ondemand.append((node.label, direct_right))
 
                 # determine if the node is the destination node of the route
                 elif node is destination_node:
-                    # if there is no entanglement link between it and its left neighbors, create link with direct left neighbor on demand
                     left_entanglement_link_nums = [node.entanglement_link_nums[i] for i in left_neighbors]
+                    # if there is no entanglement link between it and its left neighbors, create link with direct left neighbor on demand
                     if not any(left_entanglement_link_nums):
-                        node.create_link(time, direct_left_node)
-                        entanglement_ondemand.append((direct_left, node.label))
+                        gen_success = node.create_link(time, direct_left_node)
+                        # if no available memories, randomly choose memories to expire and redo entanglement generation
+                        if gen_success == False:
+                            left_reserved_status = [memory.reserved for memory in direct_left_node.memories]
+                            right_reserved_status = [memory.reserved for memory in node.memories]
+                            if not any(left_reserved_status) and any(right_reserved_status):
+                                rand_idx_left = direct_left_node.rng.integers(low=0, high=len(direct_left_node.memoies)-1)
+                                direct_left_node.memo_expire(direct_left_node.memories[rand_idx_left])
+                                retry_gen_success = node.create_link(time, direct_left_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((direct_left, node.label))
+                            elif any(left_reserved_status) and not any(right_reserved_status):
+                                rand_idx_right = node.rng.integers(low=0, high=len(node.memoies)-1)
+                                node.memo_expire(node.memories[rand_idx_right])
+                                retry_gen_success = node.create_link(time, direct_left_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((direct_left, node.label))
+                            elif not any(left_reserved_status) and not any(right_reserved_status):
+                                rand_idx_left = direct_left_node.rng.integers(low=0, high=len(direct_left_node.memoies)-1)
+                                rand_idx_right = node.rng.integers(low=0, high=len(node.memoies)-1)
+                                direct_left_node.memo_expire(direct_left_node.memories[rand_idx_left])
+                                node.memo_expire(node.memories[rand_idx_right])
+                                retry_gen_success = node.create_link(time, direct_left_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((direct_left, node.label))
+                        elif gen_success == True:
+                            entanglement_ondemand.append((direct_left, node.label))
 
                 # otherwise the node is in the middle of the route
                 else:
                     left_entanglement_link_nums = [node.entanglement_link_nums[i] for i in left_neighbors]
                     right_entanglement_link_nums = [node.entanglement_link_nums[i] for i in right_neighbors]
-
                     # if there is no entanglement link between it and its left neighbors, create link with direct left neighbor on demand
                     if not any(left_entanglement_link_nums):
-                        node.create_link(time, direct_left_node)
-                        entanglement_ondemand.append((direct_left, node.label))
+                        gen_success = node.create_link(time, direct_left_node)
+                        # if no available memories, randomly choose memories to expire and redo entanglement generation
+                        if gen_success == False:
+                            left_reserved_status = [memory.reserved for memory in direct_left_node.memories]
+                            right_reserved_status = [memory.reserved for memory in node.memories]
+                            if not any(left_reserved_status) and any(right_reserved_status):
+                                rand_idx_left = direct_left_node.rng.integers(low=0, high=len(direct_left_node.memoies)-1)
+                                direct_left_node.memo_expire(direct_left_node.memories[rand_idx_left])
+                                retry_gen_success = node.create_link(time, direct_left_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((direct_left, node.label))
+                            elif any(left_reserved_status) and not any(right_reserved_status):
+                                rand_idx_right = node.rng.integers(low=0, high=len(node.memoies)-1)
+                                node.memo_expire(node.memories[rand_idx_right])
+                                retry_gen_success = node.create_link(time, direct_left_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((direct_left, node.label))
+                            elif not any(left_reserved_status) and not any(right_reserved_status):
+                                rand_idx_left = direct_left_node.rng.integers(low=0, high=len(direct_left_node.memoies)-1)
+                                rand_idx_right = node.rng.integers(low=0, high=len(node.memoies)-1)
+                                direct_left_node.memo_expire(direct_left_node.memories[rand_idx_left])
+                                node.memo_expire(node.memories[rand_idx_right])
+                                retry_gen_success = node.create_link(time, direct_left_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((direct_left, node.label))
+                        elif gen_success == True:    
+                            entanglement_ondemand.append((direct_left, node.label))
                     
                     # if there is no entanglement link between it and its right neighbors, create link with direct right neighbor on demand
                     elif not any(right_entanglement_link_nums):
-                        node.create_link(time, direct_right_node)
-                        entanglement_ondemand.append((node.label, direct_right))
+                        gen_success = node.create_link(time, direct_right_node)
+                        # if no available memories, randomly choose memories to expire and redo entanglement generation
+                        if gen_success == False:
+                            left_reserved_status = [memory.reserved for memory in node.memories]
+                            right_reserved_status = [memory.reserved for memory in direct_right_node.memories]
+                            if not any(left_reserved_status) and any(right_reserved_status):
+                                rand_idx_left = node.rng.integers(low=0, high=len(node.memoies)-1)
+                                node.memo_expire(node.memories[rand_idx_left])
+                                retry_gen_success = node.create_link(time, direct_right_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((node.label, direct_right))
+                            elif any(left_reserved_status) and not any(right_reserved_status):
+                                rand_idx_right = direct_right_node.rng.integers(low=0, high=len(direct_right_node.memoies)-1)
+                                direct_right_node.memo_expire(direct_right_node.memories[rand_idx_right])
+                                retry_gen_success = node.create_link(time, direct_right_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((node.label, direct_right))
+                            elif not any(left_reserved_status) and not any(right_reserved_status):
+                                rand_idx_left = node.rng.integers(low=0, high=len(node.memoies)-1)
+                                rand_idx_right = direct_right_node.rng.integers(low=0, high=len(direct_right_node.memoies)-1)
+                                node.memo_expire(node.memories[rand_idx_left])
+                                direct_right_node.memo_expire(direct_right_node.memories[rand_idx_right])
+                                retry_gen_success = node.create_link(time, direct_right_node)
+                                if retry_gen_success == True:
+                                    entanglement_ondemand.append((node.label, direct_right))
+                        elif gen_success == True:
+                            entanglement_ondemand.append((node.label, direct_right))
 
                     # if both sides have entanglement links, try swapping
                     else:

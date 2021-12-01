@@ -127,11 +127,11 @@ class Node:
         # Note: it is possible that when generating entanglement on demand, no memory is available for reservation
         local_memo = self.memo_reserve()
         if local_memo is None:
-            return
+            return False
         other_memo = other_node.memo_reserve()
         if other_memo is None:
             self.memo_free(local_memo)
-            return
+            return False
 
         # entangle the two nodes
         local_memo.entangle(other_memo, time)
@@ -140,6 +140,8 @@ class Node:
         self.entanglement_link_nums[other_node.label] += 1
         # the other node should also update its entanglement link information
         other_node.entanglement_link_nums[self.label] += 1
+
+        return True
 
     def swap(self, memory1, memory2):
         """Method to do entanglement swapping.
