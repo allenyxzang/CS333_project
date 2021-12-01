@@ -1,4 +1,6 @@
+from time import time
 from matplotlib import pyplot as plt
+import networkx as nx
 
 from simulation_core import *
 from hardware import *
@@ -14,17 +16,17 @@ SEED = 0
 # Node parameters
 MEMO_SIZE = 100
 MEMO_LIFETIME = 100  # in units of simulation time step
-ENTANGLEMENT_GEN_PROB = 0.01
+ENTANGLEMENT_GEN_PROB = 0.1
 ENTANGLEMENT_SWAP_PROB = 1
-ADAPT_WEIGHT = 0.5
+ADAPT_WEIGHT = 0.01
 
 # Simulation parameters
 SIM_SEED = 0
 END_TIME = 10000
-NUM_TRIALS = 50
+NUM_TRIALS = 10
 QUEUE_LEN = 100
 QUEUE_START = 10
-QUEUE_INT = 15
+QUEUE_INT = 100
 
 
 def run_simulation(graph_arr, nodes, request_stack, end_time):
@@ -90,12 +92,12 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 links_used = []
 
                 # get current links
-                for other_label in node.entanglement_link_nums.keys():
+                for other_label, count in node.entanglement_link_nums.items():
                     # determine if entanglement links are available
-                    if node.entanglement_link_nums[other_label] > 0:
+                    if count > 0:
                         links_available.append(other_label)
                         # entanglement links available for nodes in the route for this request
-                        links = [(label, other_label)] * node.entanglement_link_nums[other_label]
+                        links = [(label, other_label)] * count
                         entanglement_available.extend(links)
                 # get links used for request
                 if i > 0:
@@ -113,7 +115,10 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
         for node in nodes:
             n = node.label
 
-            if n in route:
+            if n not in route:
+                node.create_random_link(time)
+
+            else:
                 # get neighbor information in the path
                 direct_right = None
                 direct_right_node = None
@@ -163,39 +168,24 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     else:
                         # choose memories with rightmost and leftmost entanglement
                         # find leftmost and rightmost entangled nodes
-                        leftmost = n
-                        rightmost = n
                         right_reversed = list(reversed(right_neighbors))
                         right_nums_reversed = list(reversed(right_entanglement_link_nums))
-                        for i, label in enumerate(left_neighbors):
-                            if left_entanglement_link_nums[i] > 0:
-                                leftmost = label
-                                break
-                        for i, label in enumerate(right_reversed):
-                            if right_nums_reversed[i] > 0:
-                                rightmost = label
-                                break
+                        leftmost = next((label for num, label in zip(left_entanglement_link_nums, left_neighbors)
+                                         if num > 0), n)
+                        rightmost = next((label for num, label in zip(right_nums_reversed, right_reversed)
+                                          if num > 0), n)
                         assert leftmost != n
                         assert rightmost != n
 
                         leftmost_node = nodes[leftmost]
                         rightmost_node = nodes[rightmost]
 
-                        left_memory = None
-                        right_memory = None
-                        for memory in node.memories:
-                            if memory.entangled_memory["node"] == leftmost_node:
-                                left_memory = memory
-                                break
-                        for memory in node.memories:
-                            if memory.entangled_memory["node"] == rightmost_node:
-                                right_memory = memory
-                                break
+                        left_memory = next((mem for mem in node.memories
+                                            if mem.entangled_memory["node"] == leftmost_node), None)
+                        right_memory = next((mem for mem in node.memories
+                                             if mem.entangled_memory["node"] == rightmost_node), None)
 
                         node.swap(left_memory, right_memory)
-
-            else:
-                node.create_random_link(time)
 
         # determine if the desired entanglement is established
         if current_request is not None:
@@ -259,6 +249,11 @@ if __name__ == "__main__":
         topo = json.load(fh)
         graph_arr = np.ndarray(topo["array"])
         assert graph_arr.shape == (NET_SIZE, NET_SIZE)
+    G = nx.Graph(graph_arr)
+    nx.draw_networkx(G)
+    plt.show()
+
+    # Generate nodes
     nodes = []
     for i in range(NET_SIZE):
         node = Node(i, MEMO_SIZE, MEMO_LIFETIME,
@@ -276,10 +271,11 @@ if __name__ == "__main__":
     latencies_list = []
     serve_times_list = []
 
+    tick = time()
     for trial in range(NUM_TRIALS):
         # Generate request node pair queue
         # pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
-        pair_queue = [(2, 6) for i in range(QUEUE_LEN)]  # a queue of identical requests
+        pair_queue = [(9, 6) for i in range(QUEUE_LEN)]  # a queue of identical requests
         # Generate request submission time list with constant interval
         time_list = gen_request_time_list(QUEUE_START, QUEUE_LEN, interval=QUEUE_INT)
         # Generate request stack
@@ -291,6 +287,9 @@ if __name__ == "__main__":
         # print(latencies)
         latencies_list.append(latencies)
         serve_times_list.append(serve_times)
+    sim_time = time() - tick
+    print("Total simulation time: ", sim_time)
+    print("Average time per trial: ", sim_time / NUM_TRIALS)
 
     num_latencies = min([len(latencies_list[i]) for i in range(NUM_TRIALS)])
     num_serve_times = min([len(serve_times_list[i]) for i in range(NUM_TRIALS)])
