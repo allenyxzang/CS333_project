@@ -254,16 +254,13 @@ if __name__ == "__main__":
     plt.show()
 
     # Generate nodes
-    nodes = []
-    for i in range(NET_SIZE):
-        node = Node(i, MEMO_SIZE, MEMO_LIFETIME,
-                    ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, ADAPT_WEIGHT, i)
-        nodes.append(node)
-    for i in range(NET_SIZE):
-        node = nodes[i]
-        neighbors = [nodes[j] for j, element in enumerate(graph_arr[i]) if element != 0]
-        node.set_neighbors(neighbors)
-        node.entanglement_link_nums = {n: 0 for n in range(NET_SIZE)}
+    nodes = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, seed=i)
+             for i in range(NET_SIZE)]
+    for node in nodes:
+        other_nodes = nodes[:]
+        other_nodes.remove(node)
+        node.set_other_nodes(other_nodes)
+        node.set_generation_protocol("adaptive", ADAPT_WEIGHT, graph_arr)
 
     # Generate traffic matrix
     traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)

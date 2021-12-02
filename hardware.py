@@ -1,5 +1,5 @@
 from numpy.random import default_rng
-from protocols import GenerationProtocol
+from protocols import *
 
 
 class Node:
@@ -10,7 +10,7 @@ class Node:
 
     Attributes:
         label (int): integer to label the node, corresponding to the indices of traffic matrix and requests
-        neighbors (List[Node]): list of neighboring nodes
+        other_nodes (List[Node]): list of other node objects
         memo_size (int): number of quantum memories in the node, assuming memories are of the same type
         memories (List[Memory]): local memory objects.
         lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
@@ -22,8 +22,7 @@ class Node:
         generation_protocol (GenerationProtocol): entanglement generation protocol attached to the node
     """
 
-    def __init__(self, label, memo_size, lifetime,
-                 gen_success_prob, swap_success_prob, adapt_param, seed=0):
+    def __init__(self, label, memo_size, lifetime, gen_success_prob, swap_success_prob, seed=0):
         """Constructor of a node instance.
 
         Args:
@@ -32,18 +31,17 @@ class Node:
             lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
             gen_success_prob (float): success probability of entanglement generation between 0 and 1
             swap_success_prob (float): success probability of entanglement swapping between 0 and 1
-            adapt_param (float): parameter for adaptive protocol
-            seed: seed for random number generators (default 0)
+            seed (int): seed for random number generators (default 0)
         """
 
         self.label = label
-        self.neighbors = []
+        self.other_nodes = []
         self.memo_size = memo_size
         self.memories = []
         self.entanglement_link_nums = {}
         self.left_neighbors_to_connect = []
         self.right_neighbors_to_connect = []
-        self.adapt_param = adapt_param
+
         self.generation_protocol = None
 
         self.reserved_memories = 0
@@ -60,10 +58,20 @@ class Node:
         self.gen_success_prob = gen_success_prob
         self.swap_success_prob = swap_success_prob
 
-    def set_neighbors(self, neighbors):
-        self.neighbors = neighbors
-        # create protocol
-        self.generation_protocol = GenerationProtocol(self, self.adapt_param)
+    def set_other_nodes(self, nodes):
+        self.other_nodes = nodes
+        self.entanglement_link_nums = {n.label: 0 for n in nodes}
+
+    def set_generation_protocol(self, type, adapt_param, network):
+        if type == "adaptive":
+            neighbors = [j for j, element in enumerate(network[self.label]) if element != 0]
+            self.generation_protocol = AdaptiveGenerationProtocol(self, adapt_param, neighbors)
+        elif type == "exponential":
+            raise NotImplementedError
+        elif type == "uniform":
+            raise NotImplementedError
+        else:
+            raise ValueError("Invalid generation type " + type)
 
     def memo_reserve(self):
         """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories.
@@ -114,9 +122,9 @@ class Node:
         other_node.memo_expire(other_memory)
 
     def create_random_link(self, time):
-        neighbor_label = self.generation_protocol.choose_link()
-        neighbor = next((n for n in self.neighbors if n.label == neighbor_label), None)
-        self.create_link(time, neighbor)
+        label = self.generation_protocol.choose_link()
+        other_node = next((n for n in self.other_nodes if n.label == label), None)
+        self.create_link(time, other_node)
 
     def create_link(self, time, other_node):
         """Method to create an entanglement link with another node.

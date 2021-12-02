@@ -1,12 +1,13 @@
+from abc import ABC
 from networkx import Graph, dijkstra_path
 
 
-class GenerationProtocol:
+class GenerationProtocol(ABC):
     """Class representing protocol to generate entanglement links.
 
     Attributes:
-        node (Node):
-        alpha (float):
+        node (Node): node hosting the protocol instance.
+        alpha (float): parameter used for certain protocols.
         prob_dist (Dict[int, float]): probability distribution to select direct neighbors to generate entanglement.
     """
 
@@ -14,16 +15,34 @@ class GenerationProtocol:
         """Constructor of entanglement generation protocol instance.
 
         Args:
-            node (Node):
-            adapt_param (float):
+            node (Node): node hosting the protocol instance.
+            adapt_param (float): sets alpha parameter.
         """
         self.node = node
         self.alpha = adapt_param
-
-        init_prob = 1/len(node.neighbors)
         self.prob_dist = {}
-        for neighbor in node.neighbors:
-            self.prob_dist[neighbor.label] = init_prob
+
+
+class AdaptiveGenerationProtocol(GenerationProtocol):
+    """Class representing protocol to generate entanglement links.
+
+    This protocol will update the probabilities adaptively based on network traffic.
+    """
+
+    def __init__(self, node, adapt_param, neighbors):
+        """Constructor of entanglement generation protocol instance.
+
+        Args:
+            node (Node): node hosting the protocol instance.
+            adapt_param (float): sets alpha parameter for adaptive update of probabilities.
+            neighbors (List[int]): list of labels for neighboring nodes.
+        """
+
+        super().__init__(node, adapt_param)
+        self.neighbors = neighbors
+
+        init_prob = 1/len(neighbors)
+        self.prob_dist = {neighbor: init_prob for neighbor in neighbors}
 
     def update_dist(self, links_available, links_used):
         """Method to update the probability distribution adaptively.
@@ -32,7 +51,7 @@ class GenerationProtocol:
 
         Args:
             links_available (List[int]): entanglement links available before the request is submitted.
-            links_used (List[int]): entanglement links used to complete the request request.
+            links_used (List[int]): entanglement links used to complete the request.
         """
 
         avail = set(links_available)
@@ -40,7 +59,7 @@ class GenerationProtocol:
 
         S = avail & used
         T = used - avail
-        not_used = set([n.label for n in self.node.neighbors]) - used
+        not_used = set(self.neighbors) - used
 
         # increase probability for links in T
         if len(T) > 0:
