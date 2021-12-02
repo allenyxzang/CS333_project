@@ -310,7 +310,7 @@ if __name__ == "__main__":
         low_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 0.05)
         high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 0.95)
         low_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 0.05)
-        high_percentile[i] = np.percentile([ll[i] for ll in serve_times_list], 0.95)
+        high_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 0.95)
 
     latencies_avg = latencies_avg / NUM_TRIALS
     serve_times_avg = serve_times_avg / NUM_TRIALS
@@ -327,6 +327,6 @@ if __name__ == "__main__":
     ax2 = plt.subplot(122)
     ax2.plot(requests_serve_times, serve_times_avg)
     ax2.set_title("average times to serve requests")
-    ax2.fill_between(requests_latencies, high_percentile_serve, low_percentile_serve, alpha=0.4)
+    ax2.fill_between(requests_serve_times, high_percentile_serve, low_percentile_serve, alpha=0.4)
 
     plt.show()
