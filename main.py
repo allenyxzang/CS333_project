@@ -1,4 +1,6 @@
 from time import time
+
+import numpy as np
 from matplotlib import pyplot as plt
 import networkx as nx
 
@@ -299,6 +301,17 @@ if __name__ == "__main__":
     for i in range(NUM_TRIALS):
         serve_times_avg += np.array(serve_times_list[i][:num_latencies])
 
+    # construct error
+    low_percentile = np.zeros(num_latencies)
+    high_percentile = np.zeros(num_latencies)
+    low_percentile_serve = np.zeros(num_latencies)
+    high_percentile_serve = np.zeros(num_latencies)
+    for i in range(num_latencies):
+        low_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 0.05)
+        high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 0.95)
+        low_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 0.05)
+        high_percentile[i] = np.percentile([ll[i] for ll in serve_times_list], 0.95)
+
     latencies_avg = latencies_avg / NUM_TRIALS
     serve_times_avg = serve_times_avg / NUM_TRIALS
             
@@ -309,9 +322,11 @@ if __name__ == "__main__":
     ax1 = plt.subplot(121)
     ax1.plot(requests_latencies, latencies_avg)
     ax1.set_title("average request latencies")
+    ax1.fill_between(requests_latencies, high_percentile, low_percentile, alpha=0.4)
     
     ax2 = plt.subplot(122)
     ax2.plot(requests_serve_times, serve_times_avg)
     ax2.set_title("average times to serve requests")
+    ax2.fill_between(requests_latencies, high_percentile_serve, low_percentile_serve, alpha=0.4)
 
     plt.show()
