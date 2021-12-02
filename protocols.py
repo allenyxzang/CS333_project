@@ -1,5 +1,5 @@
 from abc import ABC
-from networkx import Graph, dijkstra_path
+from networkx import Graph, dijkstra_path, shortest_path
 
 
 class GenerationProtocol(ABC):
@@ -7,20 +7,71 @@ class GenerationProtocol(ABC):
 
     Attributes:
         node (Node): node hosting the protocol instance.
-        alpha (float): parameter used for certain protocols.
         prob_dist (Dict[int, float]): probability distribution to select direct neighbors to generate entanglement.
     """
 
-    def __init__(self, node, adapt_param):
+    def __init__(self, node):
         """Constructor of entanglement generation protocol instance.
 
         Args:
             node (Node): node hosting the protocol instance.
-            adapt_param (float): sets alpha parameter.
         """
         self.node = node
-        self.alpha = adapt_param
         self.prob_dist = {}
+
+    def update_dist(self, links_available, links_used):
+        pass
+
+    def choose_link(self):
+        """Method to choose a link to attempt entanglement.
+
+        Returns:
+            int: label of node chosen for entanglement
+        """
+
+        choices = list(self.prob_dist.keys())
+        probs = list(self.prob_dist.values())
+        return self.node.rng.choice(choices, p=probs)
+
+
+class UniformGenerationProtocol(GenerationProtocol):
+    """Class representing protocol to generate entanglement links.
+
+    This protocol has probabilities following a uniform distribution.
+    """
+
+    def __init__(self, node):
+        """Constructor of entanglement generation protocol instance.
+
+        Args:
+            node (Node): host node.
+        """
+
+        super().__init__(node)
+        prob = 1 / len(node.other_nodes)
+        self.prob_dist = {n.label: prob for n in node.other_nodes}
+
+
+class ExponentialGenerationProtocol(GenerationProtocol):
+    """Class representing protocol to generate entanglement links.
+
+    This protocol has probabilities following an exponential distribution, with closer nodes more likely.
+    """
+
+    def __init__(self, node, network):
+        """Constructor of entanglement generation protocol instance.
+
+        Args:
+            node (Node): host node.
+            network (np.ndarray): adjacency array for the network.
+        """
+
+        super().__init__(node)
+        G = Graph(network)
+        self.prob_dist = {n.label: 1 / len(shortest_path(G, node.label, n.label)) for n in node.other_nodes}
+        total = sum(self.prob_dist.values())
+        for label in self.prob_dist:
+            self.prob_dist[label] /= total
 
 
 class AdaptiveGenerationProtocol(GenerationProtocol):
@@ -38,7 +89,8 @@ class AdaptiveGenerationProtocol(GenerationProtocol):
             neighbors (List[int]): list of labels for neighboring nodes.
         """
 
-        super().__init__(node, adapt_param)
+        super().__init__(node)
+        self.alpha = adapt_param
         self.neighbors = neighbors
 
         init_prob = 1/len(neighbors)
@@ -74,17 +126,6 @@ class AdaptiveGenerationProtocol(GenerationProtocol):
             new_prob = (1 - sum_st_new) / len(not_used)
             for i in not_used:
                 self.prob_dist[i] = new_prob
-
-    def choose_link(self):
-        """Method to choose a link to attempt entanglement.
-
-        Returns:
-            int: label of node chosen for entanglement
-        """
-
-        choices = list(self.prob_dist.keys())
-        probs = list(self.prob_dist.values())
-        return self.node.rng.choice(choices, p=probs)
 
 
 class Request:

@@ -62,16 +62,16 @@ class Node:
         self.other_nodes = nodes
         self.entanglement_link_nums = {n.label: 0 for n in nodes}
 
-    def set_generation_protocol(self, type, adapt_param, network):
-        if type == "adaptive":
+    def set_generation_protocol(self, protocol_type, adapt_param, network):
+        if protocol_type == "adaptive":
             neighbors = [j for j, element in enumerate(network[self.label]) if element != 0]
             self.generation_protocol = AdaptiveGenerationProtocol(self, adapt_param, neighbors)
-        elif type == "exponential":
-            raise NotImplementedError
-        elif type == "uniform":
-            raise NotImplementedError
+        elif protocol_type == "exponential":
+            self.generation_protocol = ExponentialGenerationProtocol(self, network)
+        elif protocol_type == "uniform":
+            self.generation_protocol = UniformGenerationProtocol(self)
         else:
-            raise ValueError("Invalid generation type " + type)
+            raise ValueError("Invalid generation type " + protocol_type)
 
     def memo_reserve(self):
         """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories.
