@@ -70,8 +70,8 @@ class Node:
         if protocol_type == "adaptive":
             neighbors = [j for j, element in enumerate(self.network[self.label]) if element != 0]
             self.generation_protocol = AdaptiveGenerationProtocol(self, adapt_param, neighbors)
-        elif protocol_type == "exponential":
-            self.generation_protocol = ExponentialGenerationProtocol(self, self.network)
+        elif protocol_type == "powerlaw":
+            self.generation_protocol = PowerLawGenerationProtocol(self, self.network)
         elif protocol_type == "uniform":
             self.generation_protocol = UniformGenerationProtocol(self)
         else:

@@ -52,10 +52,10 @@ class UniformGenerationProtocol(GenerationProtocol):
         self.prob_dist = {n.label: prob for n in node.other_nodes}
 
 
-class ExponentialGenerationProtocol(GenerationProtocol):
+class PowerLawGenerationProtocol(GenerationProtocol):
     """Class representing protocol to generate entanglement links.
 
-    This protocol has probabilities following an exponential distribution, with closer nodes more likely.
+    This protocol has probabilities following an power law (power -1) distribution, with closer nodes more likely.
     """
 
     def __init__(self, node, network):
