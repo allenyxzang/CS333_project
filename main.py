@@ -14,6 +14,7 @@ GENERATE_NEW = True
 NET_SIZE = 10
 NET_TYPE = "as_net"
 SEED = 0
+CONTINUOUS_SCHEME = "adaptive"
 
 # Node parameters
 MEMO_SIZE = 5
@@ -256,13 +257,13 @@ if __name__ == "__main__":
     plt.show()
 
     # Generate nodes
-    nodes = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, seed=i)
+    nodes = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=i)
              for i in range(NET_SIZE)]
     for node in nodes:
         other_nodes = nodes[:]
         other_nodes.remove(node)
         node.set_other_nodes(other_nodes)
-        node.set_generation_protocol("adaptive", ADAPT_WEIGHT, graph_arr)
+        node.set_generation_protocol(CONTINUOUS_SCHEME, ADAPT_WEIGHT)
 
     # Generate traffic matrix
     traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
@@ -314,6 +315,13 @@ if __name__ == "__main__":
 
     latencies_avg = latencies_avg / NUM_TRIALS
     serve_times_avg = serve_times_avg / NUM_TRIALS
+
+    # save data
+    filename = "data_" + CONTINUOUS_SCHEME + ".json"
+    data = {"average_latencies": latencies_avg.tolist(),
+            "average_service_times": serve_times_avg.tolist()}
+    fh = open(filename, 'w')
+    json.dump(data, fh)
             
     # visualization
     requests_latencies = np.arange(num_latencies)

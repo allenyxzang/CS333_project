@@ -1,4 +1,5 @@
 from numpy.random import default_rng
+from networkx import Graph, shortest_path
 from protocols import *
 
 
@@ -22,7 +23,7 @@ class Node:
         generation_protocol (GenerationProtocol): entanglement generation protocol attached to the node
     """
 
-    def __init__(self, label, memo_size, lifetime, gen_success_prob, swap_success_prob, seed=0):
+    def __init__(self, label, memo_size, lifetime, gen_success_prob, swap_success_prob, network, seed=0):
         """Constructor of a node instance.
 
         Args:
@@ -58,16 +59,19 @@ class Node:
         self.gen_success_prob = gen_success_prob
         self.swap_success_prob = swap_success_prob
 
+        self.network = network
+        self.graph = Graph(network)
+
     def set_other_nodes(self, nodes):
         self.other_nodes = nodes
         self.entanglement_link_nums = {n.label: 0 for n in nodes}
 
-    def set_generation_protocol(self, protocol_type, adapt_param, network):
+    def set_generation_protocol(self, protocol_type, adapt_param):
         if protocol_type == "adaptive":
-            neighbors = [j for j, element in enumerate(network[self.label]) if element != 0]
+            neighbors = [j for j, element in enumerate(self.network[self.label]) if element != 0]
             self.generation_protocol = AdaptiveGenerationProtocol(self, adapt_param, neighbors)
         elif protocol_type == "exponential":
-            self.generation_protocol = ExponentialGenerationProtocol(self, network)
+            self.generation_protocol = ExponentialGenerationProtocol(self, self.network)
         elif protocol_type == "uniform":
             self.generation_protocol = UniformGenerationProtocol(self)
         else:
@@ -140,7 +144,9 @@ class Node:
         """
 
         # check if entanglement succeeds
-        if self.rng.random() > self.gen_success_prob:
+        distance = len(shortest_path(self.graph, self.label, other_node.label)) - 1
+        success_prob = (self.gen_success_prob ** distance) * (self.swap_success_prob ** (distance - 1))
+        if self.rng.random() > success_prob:
             return False
 
         # reserve a local memory and a memory on the other node to entangle
