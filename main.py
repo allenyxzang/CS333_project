@@ -16,19 +16,19 @@ NET_TYPE = "as_net"
 SEED = 0
 
 # Node parameters
-MEMO_SIZE = 100
-MEMO_LIFETIME = 100  # in units of simulation time step
-ENTANGLEMENT_GEN_PROB = 0.1
+MEMO_SIZE = 5
+MEMO_LIFETIME = 1000  # in units of simulation time step
+ENTANGLEMENT_GEN_PROB = 0.01
 ENTANGLEMENT_SWAP_PROB = 1
-ADAPT_WEIGHT = 0.01
+ADAPT_WEIGHT = 0.05
 
 # Simulation parameters
 SIM_SEED = 0
-END_TIME = 10000
-NUM_TRIALS = 10
-QUEUE_LEN = 100
+END_TIME = 20000
+NUM_TRIALS = 50
+QUEUE_LEN = 40
 QUEUE_START = 10
-QUEUE_INT = 100
+QUEUE_INT = 500
 
 
 def run_simulation(graph_arr, nodes, request_stack, end_time):

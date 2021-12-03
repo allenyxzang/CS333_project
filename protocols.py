@@ -1,5 +1,5 @@
 from abc import ABC
-from networkx import Graph, dijkstra_path, shortest_path
+from networkx import Graph, shortest_path
 
 
 class GenerationProtocol(ABC):
@@ -106,8 +106,8 @@ class AdaptiveGenerationProtocol(GenerationProtocol):
             links_used (List[int]): entanglement links used to complete the request.
         """
 
-        avail = set(links_available)
-        used = set(links_used)
+        avail = set(links_available) & set(self.neighbors)
+        used = set(links_used) & set(self.neighbors)
 
         S = avail & used
         T = used - avail
@@ -154,7 +154,7 @@ class Request:
     def get_path(self, network, nodes):
         """Get optimal path to service request.
 
-        Uses greedy algorithm based on number of existing entanglement links.
+        Uses local best effort algorithm based on number of existing entanglement links.
 
         Args:
             network (numpy.ndarray): Adjacency matrix for the network.
@@ -164,6 +164,25 @@ class Request:
             List[int]: Optimal path as list of node labels.
         """
 
-        graph = Graph(network)
-        path = dijkstra_path(graph, self.pair[0], self.pair[1])
+        G = Graph(network)
+        end = self.pair[1]
+        u_curr = self.pair[0]
+        path = [u_curr]
+
+        while u_curr != end:
+            node = nodes[u_curr]
+            virtual_neighbors = [n for n, count in node.entanglement_link_nums.items() if count > 1]
+            if len(virtual_neighbors) == 0:
+                u = shortest_path(G, u_curr, end)[1]
+            else:
+                distances = [len(shortest_path(G, v, end)) - 1 for v in virtual_neighbors]
+                minimum_distance = min(distances)
+
+                u = virtual_neighbors[distances.index(minimum_distance)]
+                if len(shortest_path(G, u_curr, end)) <= len(shortest_path(G, u, end)):
+                    u = shortest_path(G, u_curr, end)[1]
+
+            path.append(u)
+            u_curr = u
+
         return path
