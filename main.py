@@ -316,6 +316,20 @@ if __name__ == "__main__":
     latencies_avg = latencies_avg / NUM_TRIALS
     serve_times_avg = serve_times_avg / NUM_TRIALS
 
+    # with standard deviation
+    # std_latency = np.zeros(num_latencies)
+    # std_serve = np.zeros(num_latencies)
+    # for i in range(num_latencies):
+    #     std_latency[i] = np.std([ll[i] for ll in latencies_list])
+    #     std_serve[i] = np.std([ll[i] for ll in serve_times_list])
+
+    # latencies_avg = latencies_avg / NUM_TRIALS
+    # latencies_upper = latencies_avg + 2*std_latency
+    # latencies_lower = latencies_avg - 2*std_latency
+    # serve_times_avg = serve_times_avg / NUM_TRIALS
+    # serve_times_upper = serve_times_avg + 2*std_serve
+    # serve_times_lower = serve_times_avg - 2*std_serve
+
     # save data
     filename = "data_" + CONTINUOUS_SCHEME + ".json"
     data = {"average_latencies": latencies_avg.tolist(),
@@ -336,5 +350,20 @@ if __name__ == "__main__":
     ax2.plot(requests_serve_times, serve_times_avg)
     ax2.set_title("average times to serve requests")
     ax2.fill_between(requests_serve_times, high_percentile_serve, low_percentile_serve, alpha=0.4)
+
+    # with standard deviation
+    # ax1 = plt.subplot(211)
+    # ax1.plot(requests_latencies, latencies_avg)
+    # ax1.fill_between(requests_latencies, latencies_upper, latencies_lower, alpha=0.4)
+    # ax1.set_title("average request latencies")
+    # ax1.set_xlabel("request number")
+    # ax1.set_ylabel("latency (time step)")
+    
+    # ax2 = plt.subplot(212)
+    # ax2.plot(requests_serve_times, serve_times_avg)
+    # ax2.fill_between(requests_serve_times, serve_times_upper, serve_times_lower, alpha=0.4)
+    # ax2.set_title("average times to serve requests")
+    # ax2.set_xlabel("request number")
+    # ax2.set_ylabel("service time (time step)")
 
     plt.show()
