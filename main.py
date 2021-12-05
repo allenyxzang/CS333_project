@@ -253,7 +253,8 @@ if __name__ == "__main__":
         graph_arr = np.ndarray(topo["array"])
         assert graph_arr.shape == (NET_SIZE, NET_SIZE)
     G = nx.Graph(graph_arr)
-    nx.draw_networkx(G)
+    pos = nx.spring_layout(G)
+    nx.draw_networkx(G, pos)
     plt.show()
 
     # Generate nodes
@@ -270,6 +271,7 @@ if __name__ == "__main__":
 
     latencies_list = []
     serve_times_list = []
+    usage_pattern_list = []
 
     tick = time()
     for trial in range(NUM_TRIALS):
@@ -287,20 +289,22 @@ if __name__ == "__main__":
         # print(latencies)
         latencies_list.append(latencies)
         serve_times_list.append(serve_times)
+    
     sim_time = time() - tick
     print("Total simulation time: ", sim_time)
     print("Average time per trial: ", sim_time / NUM_TRIALS)
 
     num_latencies = min([len(latencies_list[i]) for i in range(NUM_TRIALS)])
     num_serve_times = min([len(serve_times_list[i]) for i in range(NUM_TRIALS)])
-    latencies_avg = np.zeros(num_latencies)
-    serve_times_avg = np.zeros(num_serve_times)
+    num_requests = min(num_latencies, num_serve_times) # num_latencies and num_serve_times should be equal in principle
+    latencies_avg = np.zeros(num_requests)
+    serve_times_avg = np.zeros(num_requests)
 
     for i in range(NUM_TRIALS):
-        latencies_avg += np.array(latencies_list[i][:num_latencies])
+        latencies_avg += np.array(latencies_list[i][:num_requests])
 
     for i in range(NUM_TRIALS):
-        serve_times_avg += np.array(serve_times_list[i][:num_latencies])
+        serve_times_avg += np.array(serve_times_list[i][:num_requests])
 
     # construct error
     low_percentile = np.zeros(num_latencies)
@@ -317,36 +321,70 @@ if __name__ == "__main__":
     serve_times_avg = serve_times_avg / NUM_TRIALS
 
     # with standard deviation
-    # std_latency = np.zeros(num_latencies)
-    # std_serve = np.zeros(num_latencies)
-    # for i in range(num_latencies):
+    # std_latency = np.zeros(num_requests)
+    # std_serve = np.zeros(num_requests)
+    # for i in range(num_requests):
     #     std_latency[i] = np.std([ll[i] for ll in latencies_list])
     #     std_serve[i] = np.std([ll[i] for ll in serve_times_list])
 
-    # latencies_avg = latencies_avg / NUM_TRIALS
     # latencies_upper = latencies_avg + 2*std_latency
     # latencies_lower = latencies_avg - 2*std_latency
-    # serve_times_avg = serve_times_avg / NUM_TRIALS
     # serve_times_upper = serve_times_avg + 2*std_serve
     # serve_times_lower = serve_times_avg - 2*std_serve
+
+    # entanglement usage pattern information
+    available_patterns = [usage_pattern_list[i]["available"] for i in range(NUM_TRIALS)]
+    ondemand_patterns = [usage_pattern_list[i]["ondemand"] for i in range(NUM_TRIALS)]
+    available_accum = [[] for i in range(num_requests)]
+    ondemand_accum = [[] for i in range(num_requests)]
+    for i in range(num_requests):
+        for pattern in available_patterns:
+            available_accum[i] += pattern[i]
+        for pattern in ondemand_patterns:
+            ondemand_accum[i] += pattern[i]
+
+    # choose the first, the last and the middle requests' patterns for visualization
+    vis_available_patterns = [available_accum[0], available_accum[round(num_requests/2)], available_accum[-1]]
+    vis_ondemand_patterns = [ondemand_accum[0], ondemand_accum[round(num_requests/2)], ondemand_accum[-1]]
+    vis_available_graphs = []
+    vis_ondemand_graphs = []
+    for pattern in vis_available_patterns:
+        G_vis = nx.Graph(graph_arr)
+        nx.set_edge_attributes(G_vis, 0, "available")
+        # nx.set_edge_attributes(G_vis, 0, "ondemand")
+        for pair in pattern:
+            G_vis[pair[0]][pair[1]]["available"] += 1
+        vis_available_graphs.append(G_vis)
+        
+    for pattern in vis_ondemand_patterns:
+        G_vis = nx.Graph(graph_arr)
+        # nx.set_edge_attributes(G_vis, 0, "available")
+        nx.set_edge_attributes(G_vis, 0, "ondemand")
+        for pair in pattern:
+            G_vis[pair[0]][pair[1]]["ondemand"] += 1
+        vis_ondemand_graphs.append(G_vis)
 
     # save data
     filename = "data_" + CONTINUOUS_SCHEME + ".json"
     data = {"average_latencies": latencies_avg.tolist(),
-            "average_service_times": serve_times_avg.tolist()}
+            "average_service_times": serve_times_avg.tolist(),
+            "acccumulated_available_patterns": available_accum,
+            "acccumulated_ondemand_patterns": ondemand_accum}
     fh = open(filename, 'w')
     json.dump(data, fh)
             
-    # visualization
+    # statistics visualization
     requests_latencies = np.arange(num_latencies)
     requests_serve_times = np.arange(num_serve_times)
-        
-    ax1 = plt.subplot(121)
+
+    fig = plt.figure(figsize = (12,16))
+
+    ax1 = plt.subplot(211)
     ax1.plot(requests_latencies, latencies_avg)
     ax1.set_title("average request latencies")
     ax1.fill_between(requests_latencies, high_percentile, low_percentile, alpha=0.4)
     
-    ax2 = plt.subplot(122)
+    ax2 = plt.subplot(212)
     ax2.plot(requests_serve_times, serve_times_avg)
     ax2.set_title("average times to serve requests")
     ax2.fill_between(requests_serve_times, high_percentile_serve, low_percentile_serve, alpha=0.4)
@@ -354,16 +392,47 @@ if __name__ == "__main__":
     # with standard deviation
     # ax1 = plt.subplot(211)
     # ax1.plot(requests_latencies, latencies_avg)
+    # ax1.errorbar(requests_latencies, latencies_avg, yerr=std_latency, fmt="o")
     # ax1.fill_between(requests_latencies, latencies_upper, latencies_lower, alpha=0.4)
     # ax1.set_title("average request latencies")
-    # ax1.set_xlabel("request number")
+    # ax1.axhline(y=0, c="red", ls="--")
     # ax1.set_ylabel("latency (time step)")
     
     # ax2 = plt.subplot(212)
     # ax2.plot(requests_serve_times, serve_times_avg)
+    # ax2.errorbar(requests_serve_times, serve_times_avg, yerr=std_serve, fmt="o")
     # ax2.fill_between(requests_serve_times, serve_times_upper, serve_times_lower, alpha=0.4)
     # ax2.set_title("average times to serve requests")
-    # ax2.set_xlabel("request number")
+    # ax2.axhline(y=0, c="red", ls="--")
     # ax2.set_ylabel("service time (time step)")
 
+    plt.xlabel("request number")
+    plt.tight_layout()
     plt.show()
+
+    # patterns visualization on graphs
+    for G in vis_available_graphs:
+        edges = G.edges()
+        avails = [G[u][v]["available"] for u,v in edges]
+        options = {
+        "node_color": "blue",
+        "edge_color": avails,
+        "width": 2,
+        "edge_cmap": plt.cm.Greens,
+        "with_labels": False,
+        }
+        nx.draw(G, pos, **options)
+        plt.show()
+    
+    for G in vis_ondemand_graphs:
+        edges = G.edges()
+        ondemands = [G[u][v]["ondemand"] for u,v in edges]
+        options = {
+        "node_color": "blue",
+        "edge_color": ondemands,
+        "width": 2,
+        "edge_cmap": plt.cm.Reds,
+        "with_labels": False,
+        }
+        nx.draw(G, pos, **options)
+        plt.show()
