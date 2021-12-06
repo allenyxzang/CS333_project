@@ -354,7 +354,10 @@ if __name__ == "__main__":
         nx.set_edge_attributes(G_vis, 0, "available")
         # nx.set_edge_attributes(G_vis, 0, "ondemand")
         for pair in pattern:
-            G_vis[pair[0]][pair[1]]["available"] += 1
+            if (pair[0], pair[1]) not in G_vis.edges():
+                G_vis.add_edge(pair[0], pair[1], available = 1)
+            else:
+                G_vis[pair[0]][pair[1]]["available"] += 1
         vis_available_graphs.append(G_vis)
         
     for pattern in vis_ondemand_patterns:
@@ -362,7 +365,10 @@ if __name__ == "__main__":
         # nx.set_edge_attributes(G_vis, 0, "available")
         nx.set_edge_attributes(G_vis, 0, "ondemand")
         for pair in pattern:
-            G_vis[pair[0]][pair[1]]["ondemand"] += 1
+            if (pair[0], pair[1]) not in G_vis.edges():
+                G_vis.add_edge(pair[0], pair[1], ondemand = 1)
+            else:
+                G_vis[pair[0]][pair[1]]["ondemand"] += 1
         vis_ondemand_graphs.append(G_vis)
 
     # save data
@@ -412,28 +418,28 @@ if __name__ == "__main__":
     plt.show()
 
     # patterns visualization on graphs
-    for G in vis_available_graphs:
-        edges = G.edges()
-        avails = [G[u][v]["available"] for u,v in edges]
+    for Graph in vis_available_graphs:
+        edges = Graph.edges()
+        avails = [Graph[u][v]["available"] for u,v in edges]
         options = {
-        "node_color": "blue",
+        # "node_color": "blue",
         "edge_color": avails,
         "width": 2,
         "edge_cmap": plt.cm.Greens,
-        "with_labels": False,
+        "with_labels": True,
         }
-        nx.draw(G, pos, **options)
+        nx.draw_networkx(Graph, pos, **options)
         plt.show()
     
-    for G in vis_ondemand_graphs:
-        edges = G.edges()
-        ondemands = [G[u][v]["ondemand"] for u,v in edges]
+    for Graph in vis_ondemand_graphs:
+        edges = Graph.edges()
+        ondemands = [Graph[u][v]["ondemand"] for u,v in edges]
         options = {
-        "node_color": "blue",
+        # "node_color": "blue",
         "edge_color": ondemands,
         "width": 2,
         "edge_cmap": plt.cm.Reds,
-        "with_labels": False,
+        "with_labels": True,
         }
-        nx.draw(G, pos, **options)
+        nx.draw_networkx(Graph, pos, **options)
         plt.show()
