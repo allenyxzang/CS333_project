@@ -5,7 +5,7 @@ import numpy as np
 
 def gen_network_json(filename, size, net_type, seed=0):
     if net_type == "ring":
-        arr = np.ndarray((size, size), int)
+        arr = np.zeros((size, size), dtype=int)
         for i in range(size):
             arr[i, (i+1) % size] = 1
             arr[(i+1) % size, i] = 1
