@@ -28,7 +28,7 @@ SIM_SEED = 0
 END_TIME = 20000
 NUM_TRIALS = 100
 QUEUE_LEN = 40
-QUEUE_START = 10
+QUEUE_START = 500
 QUEUE_INT = 500
 
 
@@ -385,7 +385,7 @@ if __name__ == "__main__":
     requests_latencies = np.arange(num_latencies)
     requests_serve_times = np.arange(num_serve_times)
 
-    fig = plt.figure(figsize=(12, 16))
+    fig = plt.figure(figsize=(0, 24))
 
     ax1 = plt.subplot(211)
     ax1.plot(requests_latencies, latencies_avg)

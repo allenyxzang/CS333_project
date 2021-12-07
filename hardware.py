@@ -1,3 +1,4 @@
+from math import inf
 from numpy.random import default_rng
 from networkx import Graph, shortest_path
 from protocols import *

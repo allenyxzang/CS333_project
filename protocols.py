@@ -51,9 +51,9 @@ class UniformGenerationProtocol(GenerationProtocol):
 
         super().__init__(node)
         G = Graph(network)
-        possible = [n.label for n in node.others if len(shortest_path(G, node.label, n.label)) <= distance]
+        possible = [n.label for n in node.other_nodes if len(shortest_path(G, node.label, n.label)) - 1 <= distance]
         prob = 1 / len(possible)
-        self.prob_dist = {n.label: prob for n in possible}
+        self.prob_dist = {n: prob for n in possible}
 
 
 class PowerLawGenerationProtocol(GenerationProtocol):
