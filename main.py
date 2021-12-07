@@ -28,8 +28,8 @@ SIM_SEED = 0
 END_TIME = 20000
 NUM_TRIALS = 100
 QUEUE_LEN = 40
-QUEUE_START = 500
 QUEUE_INT = 500
+QUEUE_START = QUEUE_INT
 
 
 def run_simulation(graph_arr, nodes, request_stack, end_time):
@@ -429,7 +429,8 @@ if __name__ == "__main__":
         # "edge_cmap": plt.cm.Greens,
         # "with_labels": True,
         # }
-        nodes_drawn = nx.draw_networkx_nodes(Graph, pos)
+        nx.draw_networkx_nodes(Graph, pos)
+        nx.draw_networkx_labels(Graph, pos)
         edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=avails, width=2, edge_cmap=plt.cm.Greens)
         plt.colorbar(edges_drawn)
         plt.axis('off')
@@ -445,7 +446,8 @@ if __name__ == "__main__":
         # "edge_cmap": plt.cm.Reds,
         # "with_labels": True,
         # }
-        nodes_drawn = nx.draw_networkx_nodes(Graph, pos)
+        nx.draw_networkx_nodes(Graph, pos)
+        nx.draw_networkx_labels(Graph, pos)
         edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=ondemands, width=2, edge_cmap=plt.cm.Reds)
         plt.colorbar(edges_drawn)
         plt.axis('off')
