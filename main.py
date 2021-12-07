@@ -196,8 +196,8 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                 # check if we have memory entangled with destination
                 if memory.entangled_memory["node"] == destination_node:
                     # record latency and completion time
-                    latency = time - current_request.submit_time
-                    serve_time = time - current_request.start_time
+                    latency = int(time - current_request.submit_time)
+                    serve_time = int(time - current_request.start_time)
                     latencies.append(latency)
                     serve_times.append(serve_time)
                     request_complete_times.append(time)
@@ -297,7 +297,7 @@ if __name__ == "__main__":
 
     num_latencies = min([len(latencies_list[i]) for i in range(NUM_TRIALS)])
     num_serve_times = min([len(serve_times_list[i]) for i in range(NUM_TRIALS)])
-    num_requests = min(num_latencies, num_serve_times) # num_latencies and num_serve_times should be equal in principle
+    num_requests = min(num_latencies, num_serve_times)  # num_latencies and num_serve_times should be equal in principle
     latencies_avg = np.zeros(num_requests)
     serve_times_avg = np.zeros(num_requests)
 
@@ -307,19 +307,19 @@ if __name__ == "__main__":
     for i in range(NUM_TRIALS):
         serve_times_avg += np.array(serve_times_list[i][:num_requests])
 
+    latencies_avg = latencies_avg / NUM_TRIALS
+    serve_times_avg = serve_times_avg / NUM_TRIALS
+
     # construct error
     low_percentile = np.zeros(num_latencies)
     high_percentile = np.zeros(num_latencies)
     low_percentile_serve = np.zeros(num_latencies)
     high_percentile_serve = np.zeros(num_latencies)
     for i in range(num_latencies):
-        low_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 0.05)
-        high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 0.95)
-        low_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 0.05)
-        high_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 0.95)
-
-    latencies_avg = latencies_avg / NUM_TRIALS
-    serve_times_avg = serve_times_avg / NUM_TRIALS
+        low_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 5)
+        high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 95)
+        low_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 5)
+        high_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 95)
 
     # with standard deviation
     # std_latency = np.zeros(num_requests)
@@ -355,7 +355,7 @@ if __name__ == "__main__":
         # nx.set_edge_attributes(G_vis, 0, "ondemand")
         for pair in pattern:
             if (pair[0], pair[1]) not in G_vis.edges():
-                G_vis.add_edge(pair[0], pair[1], available = 1)
+                G_vis.add_edge(pair[0], pair[1], available=1)
             else:
                 G_vis[pair[0]][pair[1]]["available"] += 1
         vis_available_graphs.append(G_vis)
@@ -366,17 +366,18 @@ if __name__ == "__main__":
         nx.set_edge_attributes(G_vis, 0, "ondemand")
         for pair in pattern:
             if (pair[0], pair[1]) not in G_vis.edges():
-                G_vis.add_edge(pair[0], pair[1], ondemand = 1)
+                G_vis.add_edge(pair[0], pair[1], ondemand=1)
             else:
                 G_vis[pair[0]][pair[1]]["ondemand"] += 1
         vis_ondemand_graphs.append(G_vis)
 
     # save data
     filename = "data_" + CONTINUOUS_SCHEME + ".json"
-    data = {"average_latencies": latencies_avg.tolist(),
+    data = {"latencies": latencies_list,
+            "average_latencies": latencies_avg.tolist(),
             "average_service_times": serve_times_avg.tolist(),
-            "acccumulated_available_patterns": available_accum,
-            "acccumulated_ondemand_patterns": ondemand_accum}
+            "accumulated_available_patterns": available_accum,
+            "accumulated_ondemand_patterns": ondemand_accum}
     fh = open(filename, 'w')
     json.dump(data, fh)
             
@@ -384,7 +385,7 @@ if __name__ == "__main__":
     requests_latencies = np.arange(num_latencies)
     requests_serve_times = np.arange(num_serve_times)
 
-    fig = plt.figure(figsize = (12,16))
+    fig = plt.figure(figsize=(12, 16))
 
     ax1 = plt.subplot(211)
     ax1.plot(requests_latencies, latencies_avg)

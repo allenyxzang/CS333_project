@@ -1,3 +1,5 @@
+from math import sqrt
+
 import json
 import networkx as nx
 import numpy as np
@@ -9,6 +11,11 @@ def gen_network_json(filename, size, net_type, seed=0):
         for i in range(size):
             arr[i, (i+1) % size] = 1
             arr[(i+1) % size, i] = 1
+
+    elif net_type == "grid":
+        side = int(sqrt(size))
+        G = nx.grid_2d_graph(side, side)
+        arr = nx.convert_matrix.to_numpy_array(G)
 
     elif net_type == "as_net":
         G = nx.random_internet_as_graph(size, seed)
