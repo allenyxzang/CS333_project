@@ -385,7 +385,7 @@ if __name__ == "__main__":
     requests_latencies = np.arange(num_latencies)
     requests_serve_times = np.arange(num_serve_times)
 
-    fig = plt.figure(figsize=(0, 24))
+    fig = plt.figure(figsize=(20, 24))
 
     ax1 = plt.subplot(211)
     ax1.plot(requests_latencies, latencies_avg)
@@ -422,25 +422,31 @@ if __name__ == "__main__":
     for Graph in vis_available_graphs:
         edges = Graph.edges()
         avails = [Graph[u][v]["available"] for u,v in edges]
-        options = {
+        # options = {
         # "node_color": "blue",
-        "edge_color": avails,
-        "width": 2,
-        "edge_cmap": plt.cm.Greens,
-        "with_labels": True,
-        }
-        nx.draw_networkx(Graph, pos, **options)
+        # "edge_color": avails,
+        # "width": 2,
+        # "edge_cmap": plt.cm.Greens,
+        # "with_labels": True,
+        # }
+        nodes_drawn = nx.draw_networkx_nodes(Graph, pos)
+        edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=avails, width=2, edge_cmap=plt.cm.Greens)
+        plt.colorbar(edges_drawn)
+        plt.axis('off')
         plt.show()
     
     for Graph in vis_ondemand_graphs:
         edges = Graph.edges()
         ondemands = [Graph[u][v]["ondemand"] for u,v in edges]
-        options = {
+        # options = {
         # "node_color": "blue",
-        "edge_color": ondemands,
-        "width": 2,
-        "edge_cmap": plt.cm.Reds,
-        "with_labels": True,
-        }
-        nx.draw_networkx(Graph, pos, **options)
+        # "edge_color": ondemands,
+        # "width": 2,
+        # "edge_cmap": plt.cm.Reds,
+        # "with_labels": True,
+        # }
+        nodes_drawn = nx.draw_networkx_nodes(Graph, pos)
+        edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=ondemands, width=2, edge_cmap=plt.cm.Reds)
+        plt.colorbar(edges_drawn)
+        plt.axis('off')
         plt.show()
