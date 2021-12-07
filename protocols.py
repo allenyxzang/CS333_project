@@ -40,16 +40,20 @@ class UniformGenerationProtocol(GenerationProtocol):
     This protocol has probabilities following a uniform distribution.
     """
 
-    def __init__(self, node):
+    def __init__(self, node, network, distance=1):
         """Constructor of entanglement generation protocol instance.
 
         Args:
             node (Node): host node.
+            network (np.ndarray): adjacency array for the network.
+            distance (int): max distance to nodes to select.
         """
 
         super().__init__(node)
-        prob = 1 / len(node.other_nodes)
-        self.prob_dist = {n.label: prob for n in node.other_nodes}
+        G = Graph(network)
+        possible = [n.label for n in node.others if len(shortest_path(G, node.label, n.label)) <= distance]
+        prob = 1 / len(possible)
+        self.prob_dist = {n.label: prob for n in possible}
 
 
 class PowerLawGenerationProtocol(GenerationProtocol):

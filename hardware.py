@@ -73,7 +73,7 @@ class Node:
         elif protocol_type == "powerlaw":
             self.generation_protocol = PowerLawGenerationProtocol(self, self.network)
         elif protocol_type == "uniform":
-            self.generation_protocol = UniformGenerationProtocol(self)
+            self.generation_protocol = UniformGenerationProtocol(self, self.network)
         else:
             raise ValueError("Invalid generation type " + protocol_type)
 
