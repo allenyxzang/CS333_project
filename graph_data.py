@@ -10,6 +10,10 @@ filename_adaptive = "data_adaptive.json"
 filename_uniform = "data_uniform.json"
 filename_powerlaw = "data_powerlaw.json"
 
+avg_latencies = []
+max_latencies = []
+legend = []
+
 if ADAPTIVE:
     fh_adaptive = open(filename_adaptive)
     adaptive_data = json.load(fh_adaptive)
@@ -17,14 +21,13 @@ if ADAPTIVE:
     latencies_list = adaptive_data["latencies"]
 
     num_latencies = len(adaptive_latencies)
-    low_percentile = np.zeros(num_latencies)
     high_percentile = np.zeros(num_latencies)
     for i in range(num_latencies):
-        low_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 5)
         high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 95)
 
-    plt.plot(np.arange(num_latencies), adaptive_latencies)
-    plt.fill_between(np.arange(num_latencies), high_percentile, low_percentile, alpha=0.3)
+    avg_latencies.append(adaptive_latencies)
+    max_latencies.append(high_percentile)
+    legend.append("Adaptive")
 
 if UNIFORM:
     fh_uniform = open(filename_uniform)
@@ -33,14 +36,13 @@ if UNIFORM:
     latencies_list = uniform_data["latencies"]
 
     num_latencies = len(uniform_latencies)
-    low_percentile = np.zeros(num_latencies)
     high_percentile = np.zeros(num_latencies)
     for i in range(num_latencies):
-        low_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 5)
         high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 95)
 
-    plt.plot(np.arange(num_latencies), uniform_latencies)
-    plt.fill_between(np.arange(num_latencies), high_percentile, low_percentile, alpha=0.3)
+    avg_latencies.append(uniform_latencies)
+    max_latencies.append(high_percentile)
+    legend.append("Uniform")
 
 if POWER_LAW:
     fh_powerlaw = open(filename_powerlaw)
@@ -49,18 +51,30 @@ if POWER_LAW:
     latencies_list = powerlaw_data["latencies"]
 
     num_latencies = len(powerlaw_latencies)
-    low_percentile = np.zeros(num_latencies)
     high_percentile = np.zeros(num_latencies)
     for i in range(num_latencies):
-        low_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 5)
         high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 95)
 
-    plt.plot(np.arange(num_latencies), powerlaw_latencies)
-    plt.fill_between(np.arange(num_latencies), high_percentile, low_percentile, alpha=0.3)
+    avg_latencies.append(powerlaw_latencies)
+    max_latencies.append(high_percentile)
+    legend.append("Power Law")
 
-plt.title("Average Latencies")
-plt.xlabel("Request Number")
-plt.ylabel("Latency")
-plt.legend(["Adaptive", "Uniform", "Power Law"])
-plt.savefig("graph.png")
-plt.show()
+fig, ax = plt.subplots(2, 1, figsize=(10, 10))
+
+for al in avg_latencies:
+    ax[0].plot(np.arange(len(al)), al)
+ax[0].set_title("Average Latencies")
+ax[0].set_xlabel("Request Number")
+ax[0].set_ylabel("Latency")
+ax[0].legend(legend)
+
+for ml in max_latencies:
+    ax[1].plot(np.arange(len(ml)), ml)
+ax[1].set_title("Max Latencies")
+ax[1].set_xlabel("Request Number")
+ax[1].set_ylabel("Latency")
+ax[1].legend(legend)
+
+fig.tight_layout()
+fig.savefig("graph.png")
+fig.show()
