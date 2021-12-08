@@ -17,7 +17,6 @@ class Node:
         memories (List[Memory]): local memory objects.
         lifetime (int): quantum memory lifetime in unit of simulation time step, represents time to store entanglement
         entanglement_link_nums (Dict[int, int]): keeps track of numbers of entanglement links with direct neighbors (for path finding alg.)
-        reserved_memories (int): number of memories reserved on the node.
         _next_avail_memory (int): index (in self.memories) of next memory that may be reserved.
         left_neighbors_to_connect (List[List]): list of left neighbors' indices in route for entanglement connection
         right_neighbors_to_connect (List[List]): list of right neighbors' indices in route for entanglement connection
@@ -46,7 +45,6 @@ class Node:
 
         self.generation_protocol = None
 
-        self.reserved_memories = 0
         self._next_avail_memory = 0
 
         # create memories
