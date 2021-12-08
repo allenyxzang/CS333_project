@@ -18,6 +18,10 @@ class GenerationProtocol(ABC):
         """
         self.node = node
         self.prob_dist = {}
+        self.starting_prob_dist = {}
+
+    def reset(self):
+        self.prob_dist = self.starting_prob_dist
 
     def update_dist(self, links_available, links_used):
         pass
@@ -54,6 +58,7 @@ class UniformGenerationProtocol(GenerationProtocol):
         possible = [n.label for n in node.other_nodes if len(shortest_path(G, node.label, n.label)) - 1 <= distance]
         prob = 1 / len(possible)
         self.prob_dist = {n: prob for n in possible}
+        self.starting_prob_dist = self.prob_dist
 
 
 class PowerLawGenerationProtocol(GenerationProtocol):
@@ -76,6 +81,7 @@ class PowerLawGenerationProtocol(GenerationProtocol):
         total = sum(self.prob_dist.values())
         for label in self.prob_dist:
             self.prob_dist[label] /= total
+        self.starting_prob_dist = self.prob_dist
 
 
 class AdaptiveGenerationProtocol(GenerationProtocol):
@@ -99,6 +105,7 @@ class AdaptiveGenerationProtocol(GenerationProtocol):
 
         init_prob = 1/len(neighbors)
         self.prob_dist = {neighbor: init_prob for neighbor in neighbors}
+        self.starting_prob_dist = self.prob_dist
 
     def update_dist(self, links_available, links_used):
         """Method to update the probability distribution adaptively.

@@ -59,7 +59,7 @@ if POWER_LAW:
     max_latencies.append(high_percentile)
     legend.append("Power Law")
 
-fig, ax = plt.subplots(2, 1, figsize=(10, 10))
+fig, ax = plt.subplots(2, 1, figsize=(7, 7))
 
 for al in avg_latencies:
     ax[0].plot(np.arange(len(al)), al)

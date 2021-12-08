@@ -21,7 +21,7 @@ MEMO_SIZE = 5
 MEMO_LIFETIME = 1000  # in units of simulation time step
 ENTANGLEMENT_GEN_PROB = 0.01
 ENTANGLEMENT_SWAP_PROB = 1
-ADAPT_WEIGHT = 0.05
+ADAPT_WEIGHT = 0.1
 
 # Simulation parameters
 SIM_SEED = 0
@@ -286,10 +286,13 @@ if __name__ == "__main__":
         # Run simulation
         latencies, serve_times, congestion, request_complete_times, entanglement_usage_pattern =\
             run_simulation(graph_arr, nodes, request_stack, END_TIME)
-        # print(latencies)
         latencies_list.append(latencies)
         serve_times_list.append(serve_times)
         usage_pattern_list.append(entanglement_usage_pattern)
+
+        # reset nodes
+        for node in nodes:
+            node.reset()
     
     sim_time = time() - tick
     print("Total simulation time: ", sim_time)

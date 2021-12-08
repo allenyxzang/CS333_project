@@ -78,6 +78,14 @@ class Node:
         else:
             raise ValueError("Invalid generation type " + protocol_type)
 
+    def reset(self):
+        self.generation_protocol.reset()
+        for mem in self.memories:
+            self.memo_expire(mem)
+
+        self.left_neighbors_to_connect = []
+        self.right_neighbors_to_connect = []
+
     def memo_reserve(self):
         """Method for entanglement generation and swapping protocol to invoke to reserve quantum memories.
 
