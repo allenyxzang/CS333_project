@@ -321,18 +321,6 @@ if __name__ == "__main__":
         low_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 5)
         high_percentile_serve[i] = np.percentile([ll[i] for ll in serve_times_list], 95)
 
-    # with standard deviation
-    # std_latency = np.zeros(num_requests)
-    # std_serve = np.zeros(num_requests)
-    # for i in range(num_requests):
-    #     std_latency[i] = np.std([ll[i] for ll in latencies_list])
-    #     std_serve[i] = np.std([ll[i] for ll in serve_times_list])
-
-    # latencies_upper = latencies_avg + 2*std_latency
-    # latencies_lower = latencies_avg - 2*std_latency
-    # serve_times_upper = serve_times_avg + 2*std_serve
-    # serve_times_lower = serve_times_avg - 2*std_serve
-
     # entanglement usage pattern information
     available_patterns = [usage_pattern_list[i]["available"] for i in range(NUM_TRIALS)]
     ondemand_patterns = [usage_pattern_list[i]["ondemand"] for i in range(NUM_TRIALS)]
