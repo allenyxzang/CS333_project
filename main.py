@@ -257,15 +257,6 @@ if __name__ == "__main__":
     nx.draw_networkx(G, pos)
     plt.show()
 
-    # Generate nodes
-    nodes = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=i)
-             for i in range(NET_SIZE)]
-    for node in nodes:
-        other_nodes = nodes[:]
-        other_nodes.remove(node)
-        node.set_other_nodes(other_nodes)
-        node.set_generation_protocol(CONTINUOUS_SCHEME, ADAPT_WEIGHT)
-
     # Generate traffic matrix
     traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
 
@@ -275,6 +266,16 @@ if __name__ == "__main__":
 
     tick = time()
     for trial in range(NUM_TRIALS):
+        # set nodes
+        seed_start = NET_SIZE * trial
+        nodes = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
+                 for i in range(NET_SIZE)]
+        for node in nodes:
+            other_nodes = nodes[:]
+            other_nodes.remove(node)
+            node.set_other_nodes(other_nodes)
+            node.set_generation_protocol(CONTINUOUS_SCHEME, ADAPT_WEIGHT)
+
         # Generate request node pair queue
         # pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
         pair_queue = [(9, 6) for i in range(QUEUE_LEN)]  # a queue of identical requests
@@ -289,10 +290,6 @@ if __name__ == "__main__":
         latencies_list.append(latencies)
         serve_times_list.append(serve_times)
         usage_pattern_list.append(entanglement_usage_pattern)
-
-        # reset nodes
-        for node in nodes:
-            node.reset()
     
     sim_time = time() - tick
     print("Total simulation time: ", sim_time)
