@@ -45,8 +45,8 @@ def gen_pair_queue(traffic_mtx, node_num, queue_len, rng_mtx, rng_judge):
     idx = 0
     while idx < queue_len:
         # random selection of traffic matrix element for judgement
-        rand_row = rng_mtx.integers(node_num)
-        rand_col = rng_mtx.integers(node_num)
+        rand_row = int(rng_mtx.integers(node_num))
+        rand_col = int(rng_mtx.integers(node_num))
 
         if rng_judge.random() < traffic_mtx[rand_row, rand_col]:
             # request node pair in form of two-element tuple
