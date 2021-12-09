@@ -6,7 +6,7 @@ from matplotlib import pyplot as plt
 cmap = matplotlib.cm.get_cmap('viridis')
 
 adaptive_parameters = [0, 0.05, 0.1, 0.15, 0.2]
-legend = [r'\alpha={}'.format(a) for a in adaptive_parameters]
+legend = [r'$\alpha$={}'.format(a) for a in adaptive_parameters]
 avg_latencies = []
 max_latencies = []
 
