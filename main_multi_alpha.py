@@ -261,7 +261,7 @@ if __name__ == "__main__":
     traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
 
     latencies_list = []    
-    alpha_list = [0, 0.5, 1, 1.5, 2, 2.5]
+    alpha_list = [0, 0.05, 0.1, 0.15, 0.2, 0.25]
 
     fig = plt.figure(figsize=(8, 10))
 
