@@ -385,23 +385,6 @@ if __name__ == "__main__":
     ax2.set_title("average times to serve requests")
     ax2.fill_between(requests_serve_times, high_percentile_serve, low_percentile_serve, alpha=0.4)
 
-    # with standard deviation
-    # ax1 = plt.subplot(211)
-    # ax1.plot(requests_latencies, latencies_avg)
-    # ax1.errorbar(requests_latencies, latencies_avg, yerr=std_latency, fmt="o")
-    # ax1.fill_between(requests_latencies, latencies_upper, latencies_lower, alpha=0.4)
-    # ax1.set_title("average request latencies")
-    # ax1.axhline(y=0, c="red", ls="--")
-    # ax1.set_ylabel("latency (time step)")
-    
-    # ax2 = plt.subplot(212)
-    # ax2.plot(requests_serve_times, serve_times_avg)
-    # ax2.errorbar(requests_serve_times, serve_times_avg, yerr=std_serve, fmt="o")
-    # ax2.fill_between(requests_serve_times, serve_times_upper, serve_times_lower, alpha=0.4)
-    # ax2.set_title("average times to serve requests")
-    # ax2.axhline(y=0, c="red", ls="--")
-    # ax2.set_ylabel("service time (time step)")
-
     plt.xlabel("request number")
     plt.tight_layout()
     plt.show()
@@ -410,13 +393,6 @@ if __name__ == "__main__":
     for Graph in vis_available_graphs:
         edges = Graph.edges()
         avails = [Graph[u][v]["available"] for u,v in edges]
-        # options = {
-        # "node_color": "blue",
-        # "edge_color": avails,
-        # "width": 2,
-        # "edge_cmap": plt.cm.Greens,
-        # "with_labels": True,
-        # }
         nx.draw_networkx_nodes(Graph, pos)
         nx.draw_networkx_labels(Graph, pos)
         edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=avails, width=2, edge_cmap=plt.cm.Greens)
@@ -427,13 +403,6 @@ if __name__ == "__main__":
     for Graph in vis_ondemand_graphs:
         edges = Graph.edges()
         ondemands = [Graph[u][v]["ondemand"] for u,v in edges]
-        # options = {
-        # "node_color": "blue",
-        # "edge_color": ondemands,
-        # "width": 2,
-        # "edge_cmap": plt.cm.Reds,
-        # "with_labels": True,
-        # }
         nx.draw_networkx_nodes(Graph, pos)
         nx.draw_networkx_labels(Graph, pos)
         edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=ondemands, width=2, edge_cmap=plt.cm.Reds)
