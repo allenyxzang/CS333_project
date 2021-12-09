@@ -321,8 +321,8 @@ if __name__ == "__main__":
         # statistics visualization
         requests_latencies = np.arange(num_requests)
     
-        ax1.plot(requests_latencies, latencies_avg, label=r"$\alpha$=%.1f" %alpha)
-        ax2.plot(requests_latencies, high_percentile, label=r"$\alpha$=%.1f" %alpha)
+        ax1.plot(requests_latencies, latencies_avg, label=r"$\alpha$=%.2f" %alpha)
+        ax2.plot(requests_latencies, high_percentile, label=r"$\alpha$=%.2f" %alpha)
     
     ax1.legend(loc="upper left")
     ax2.legend(loc="upper left")
