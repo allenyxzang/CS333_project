@@ -362,6 +362,7 @@ if __name__ == "__main__":
     # save data
     filename = "data_" + CONTINUOUS_SCHEME + ".json"
     data = {"latencies": latencies_list,
+            "service_times": serve_times_list,
             "average_latencies": latencies_avg.tolist(),
             "average_service_times": serve_times_avg.tolist(),
             "accumulated_available_patterns": available_accum,
