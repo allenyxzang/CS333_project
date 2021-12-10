@@ -107,12 +107,12 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     links_used.append(new_route[i-1])
                 if i < (len(new_route) - 1):
                     links_used.append(new_route[i+1])
-
-                # record entanglement links available (stemming from nodes in route) and reset entanglement_available
-                entanglement_usage_pattern["available"].append(entanglement_available)
-                entanglement_available = []
-
                 node.generation_protocol.update_dist(links_available, links_used)
+
+            # record entanglement links available (stemming from nodes in route) and reset entanglement_available
+            entanglement_usage_pattern["available"].append(entanglement_available)
+            entanglement_available = []
+
 
         # call function to run node (entanglement generation) protocol
         for node in nodes:
