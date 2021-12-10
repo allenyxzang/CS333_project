@@ -64,7 +64,6 @@ fig, ax = plt.subplots(2, 1, figsize=(7, 7))
 for al in avg_latencies:
     ax[0].plot(np.arange(len(al)), al)
 ax[0].set_title("Average Latencies")
-ax[0].set_xlabel("Request Number")
 ax[0].set_ylabel("Latency")
 ax[0].legend(legend)
 
@@ -73,7 +72,6 @@ for ml in max_latencies:
 ax[1].set_title("Max Latencies")
 ax[1].set_xlabel("Request Number")
 ax[1].set_ylabel("Latency")
-ax[1].legend(legend)
 
 fig.tight_layout()
 fig.savefig("graph.png")

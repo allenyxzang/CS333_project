@@ -290,6 +290,7 @@ if __name__ == "__main__":
         latencies_list.append(latencies)
         serve_times_list.append(serve_times)
         usage_pattern_list.append(entanglement_usage_pattern)
+        print("Finished trial {} of {}".format(trial + 1, NUM_TRIALS))
     
     sim_time = time() - tick
     print("Total simulation time: ", sim_time)

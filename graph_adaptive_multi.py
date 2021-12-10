@@ -28,11 +28,10 @@ for alpha in adaptive_parameters:
 fig, ax = plt.subplots(2, 1, figsize=(7, 7))
 
 for alpha, al, ml in zip(adaptive_parameters, avg_latencies, max_latencies):
-    color = cmap(alpha/(max(adaptive_parameters)*1.1))  # exclude bright yellow
+    color = cmap(adaptive_parameters.index(alpha)/((len(adaptive_parameters)-1)*1.1))  # exclude bright yellow
     ax[0].plot(np.arange(len(al)), al, color=color)
     ax[1].plot(np.arange(len(ml)), ml, color=color)
 ax[0].set_title("Average Latencies")
-ax[0].set_xlabel("Request Number")
 ax[0].set_ylabel("Latency")
 ax[0].legend(legend, loc='upper left')
 ax[1].set_title("Max Latencies")
