@@ -374,7 +374,7 @@ if __name__ == "__main__":
     requests_latencies = np.arange(num_latencies)
     requests_serve_times = np.arange(num_serve_times)
 
-    fig = plt.figure(figsize=(20, 24))
+    fig = plt.figure(figsize=(7, 7))
 
     ax1 = plt.subplot(211)
     ax1.plot(requests_latencies, latencies_avg)
