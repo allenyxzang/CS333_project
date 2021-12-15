@@ -250,7 +250,7 @@ if __name__ == "__main__":
     else:
         fh = open(CONFIG)
         topo = json.load(fh)
-        graph_arr = np.ndarray(topo["array"])
+        graph_arr = np.array(topo["array"])
         assert graph_arr.shape == (NET_SIZE, NET_SIZE)
     G = nx.Graph(graph_arr)
     pos = nx.spring_layout(G)
