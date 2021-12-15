@@ -9,26 +9,28 @@ from hardware import *
 from protocols import *
 
 # Network parameters
-CONFIG = "network.json"
-GENERATE_NEW = True
-NET_SIZE = 10
+# CONFIG = "network.json"
+CONFIG = "network_customized.json"
+TRAFFIC_MATRIX = "traffic_matrix.json"
+GENERATE_NEW = False
+NET_SIZE = 8
 NET_TYPE = "as_net"
 SEED = 0
 CONTINUOUS_SCHEME = "adaptive"
 
 # Node parameters
-MEMO_SIZE = 5
+MEMO_SIZE = 30
 MEMO_LIFETIME = 1000  # in units of simulation time step
 ENTANGLEMENT_GEN_PROB = 0.01
 ENTANGLEMENT_SWAP_PROB = 1
-ADAPT_WEIGHT = 0.1
+ADAPT_WEIGHT = 0.05
 
 # Simulation parameters
 SIM_SEED = 0
-END_TIME = 20000
-NUM_TRIALS = 100
-QUEUE_LEN = 40
-QUEUE_INT = 500
+END_TIME = 40000
+NUM_TRIALS = 10
+QUEUE_LEN = 200
+QUEUE_INT = 200
 QUEUE_START = QUEUE_INT
 
 
@@ -250,7 +252,7 @@ if __name__ == "__main__":
     else:
         fh = open(CONFIG)
         topo = json.load(fh)
-        graph_arr = np.array(topo["array"])
+        graph_arr = np.ndarray(topo["array"])
         assert graph_arr.shape == (NET_SIZE, NET_SIZE)
     G = nx.Graph(graph_arr)
     pos = nx.spring_layout(G)
@@ -258,7 +260,10 @@ if __name__ == "__main__":
     plt.show()
 
     # Generate traffic matrix
-    traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
+    # traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
+    tm = open(TRAFFIC_MATRIX)
+    tm_json = json.load(tm)
+    traffic_mtx = np.array(tm_json["matrix"])
 
     latencies_list = []
     serve_times_list = []
@@ -277,8 +282,8 @@ if __name__ == "__main__":
             node.set_generation_protocol(CONTINUOUS_SCHEME, ADAPT_WEIGHT)
 
         # Generate request node pair queue
-        # pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
-        pair_queue = [(9, 6) for i in range(QUEUE_LEN)]  # a queue of identical requests
+        pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
+        # pair_queue = [(9, 6) for i in range(QUEUE_LEN)]  # a queue of identical requests
         # Generate request submission time list with constant interval
         time_list = gen_request_time_list(QUEUE_START, QUEUE_LEN, interval=QUEUE_INT)
         # Generate request stack
