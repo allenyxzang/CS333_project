@@ -19,7 +19,8 @@ SEED = 0
 CONTINUOUS_SCHEME = "adaptive"
 
 # Node parameters
-MEMO_SIZE = 30
+MEMO_SIZE = 5 # default memory number per node
+MEMO_BN_SIZE = 30 # memory number for bottleneck end nodes
 MEMO_LIFETIME = 1000  # in units of simulation time step
 ENTANGLEMENT_GEN_PROB = 0.01
 ENTANGLEMENT_SWAP_PROB = 1
@@ -273,8 +274,15 @@ if __name__ == "__main__":
     for trial in range(NUM_TRIALS):
         # set nodes
         seed_start = NET_SIZE * trial
-        nodes = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
-                 for i in range(NET_SIZE)]
+        # nodes = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
+        #          for i in range(NET_SIZE)]
+        nodes_edge_1 = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
+                 for i in (0, 1, 2)]
+        nodes_edge_2 = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
+                 for i in (5, 6, 7)]
+        nodes_bn = [Node(i, MEMO_BN_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
+                 for i in (3, 4)] # bottleneck end nodes
+        nodes = nodes_edge_1 + nodes_bn + nodes_edge_2
         for node in nodes:
             other_nodes = nodes[:]
             other_nodes.remove(node)
