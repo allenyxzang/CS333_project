@@ -11,16 +11,17 @@ from protocols import *
 # Network parameters
 # CONFIG = "network.json"
 CONFIG = "network_customized.json"
+GENERATE_NEW_NET = False
 TRAFFIC_MATRIX = "traffic_matrix.json"
-GENERATE_NEW = False
+GENERATE_NEW_TRAFFIC = False
+RANDOM_REQUESTS = True
 NET_SIZE = 8
 NET_TYPE = "as_net"
 SEED = 0
 CONTINUOUS_SCHEME = "adaptive"
 
 # Node parameters
-MEMO_SIZE = 5 # default memory number per node
-MEMO_BN_SIZE = 30 # memory number for bottleneck end nodes
+MEMO_SIZE = 5  # default memory number per node
 MEMO_LIFETIME = 1000  # in units of simulation time step
 ENTANGLEMENT_GEN_PROB = 0.01
 ENTANGLEMENT_SWAP_PROB = 1
@@ -115,7 +116,6 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
             # record entanglement links available (stemming from nodes in route) and reset entanglement_available
             entanglement_usage_pattern["available"].append(entanglement_available)
             entanglement_available = []
-
 
         # call function to run node (entanglement generation) protocol
         for node in nodes:
@@ -248,23 +248,29 @@ if __name__ == "__main__":
     rng = default_rng(SIM_SEED)
 
     # Generate network
-    if GENERATE_NEW:
+    default_memos = [MEMO_SIZE] * NET_SIZE
+    if GENERATE_NEW_NET:
         graph_arr = gen_network_json(CONFIG, NET_SIZE, NET_TYPE, SIM_SEED)
+        memo_sizes = default_memos
     else:
         fh = open(CONFIG)
         topo = json.load(fh)
-        graph_arr = np.ndarray(topo["array"])
+        graph_arr = np.array(topo["array"])
+        memo_sizes = np.array(topo.get("memo_sizes", default_memos))
         assert graph_arr.shape == (NET_SIZE, NET_SIZE)
+        assert len(memo_sizes) == NET_SIZE
     G = nx.Graph(graph_arr)
     pos = nx.spring_layout(G)
     nx.draw_networkx(G, pos)
     plt.show()
 
     # Generate traffic matrix
-    # traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
-    tm = open(TRAFFIC_MATRIX)
-    tm_json = json.load(tm)
-    traffic_mtx = np.array(tm_json["matrix"])
+    if GENERATE_NEW_TRAFFIC:
+        traffic_mtx = gen_traffic_mtx(NET_SIZE, rng)
+    else:
+        tm = open(TRAFFIC_MATRIX)
+        tm_json = json.load(tm)
+        traffic_mtx = np.array(tm_json["matrix"])
 
     latencies_list = []
     serve_times_list = []
@@ -274,15 +280,9 @@ if __name__ == "__main__":
     for trial in range(NUM_TRIALS):
         # set nodes
         seed_start = NET_SIZE * trial
-        # nodes = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
-        #          for i in range(NET_SIZE)]
-        nodes_edge_1 = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
-                 for i in (0, 1, 2)]
-        nodes_edge_2 = [Node(i, MEMO_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
-                 for i in (5, 6, 7)]
-        nodes_bn = [Node(i, MEMO_BN_SIZE, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr, seed=seed_start+i)
-                 for i in (3, 4)] # bottleneck end nodes
-        nodes = nodes_edge_1 + nodes_bn + nodes_edge_2
+        nodes = [Node(i, memo_size, MEMO_LIFETIME, ENTANGLEMENT_GEN_PROB, ENTANGLEMENT_SWAP_PROB, graph_arr,
+                      seed=seed_start+i)
+                 for i, memo_size in enumerate(memo_sizes)]
         for node in nodes:
             other_nodes = nodes[:]
             other_nodes.remove(node)
@@ -290,8 +290,10 @@ if __name__ == "__main__":
             node.set_generation_protocol(CONTINUOUS_SCHEME, ADAPT_WEIGHT)
 
         # Generate request node pair queue
-        pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
-        # pair_queue = [(9, 6) for i in range(QUEUE_LEN)]  # a queue of identical requests
+        if RANDOM_REQUESTS:
+            pair_queue = gen_pair_queue(traffic_mtx, NET_SIZE, QUEUE_LEN, rng, rng)
+        else:
+            pair_queue = [(9, 6) for i in range(QUEUE_LEN)]  # a queue of identical requests
         # Generate request submission time list with constant interval
         time_list = gen_request_time_list(QUEUE_START, QUEUE_LEN, interval=QUEUE_INT)
         # Generate request stack
