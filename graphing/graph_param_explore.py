@@ -1,8 +1,8 @@
 import os
-import json
-import numpy as np
 from matplotlib.cm import get_cmap
 from matplotlib import pyplot as plt
+
+from graph_utils import *
 
 # network params
 lifetime = 100
@@ -20,39 +20,19 @@ path = os.path.join(os.getcwd(), data_dir, network_dir_template.format(memories)
 cmap = get_cmap('viridis')
 fig, ax = plt.subplots(2, 1, figsize=(7, 7))
 
-
 # get data for non-adaptive
 filename = os.path.join(path, filename_template.format(lifetime, probability))
-fh = open(filename)
-data = json.load(fh)
-latencies = data["average_latencies"]
-latencies_list = data["latencies"]
-
-num_latencies = len(latencies)
-high_percentile = np.zeros(num_latencies)
-for i in range(num_latencies):
-    high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 95)
-
+latencies, high_percentile = get_data(filename)
 color = cmap(0)
 ax[0].plot(latencies, color=color)
 ax[1].plot(high_percentile, color=color)
 
 # get data for adaptive
 filename = os.path.join(path, filename_adapt_template.format(lifetime, probability))
-fh = open(filename)
-data = json.load(fh)
-latencies = data["average_latencies"]
-latencies_list = data["latencies"]
-
-num_latencies = len(latencies)
-high_percentile = np.zeros(num_latencies)
-for i in range(num_latencies):
-    high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 95)
-
+latencies, high_percentile = get_data(filename)
 color = cmap(10/11)
 ax[0].plot(latencies, color=color)
 ax[1].plot(high_percentile, color=color)
-
 
 legend = [r'$\alpha$={}'.format(a) for a in [0, 0.05]]
 ax[0].set_title("Average Latencies")
