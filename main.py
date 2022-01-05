@@ -9,7 +9,6 @@ from hardware import *
 from protocols import *
 
 # Network parameters
-# CONFIG = "network.json"
 CONFIG = "network_customized.json"
 GENERATE_NEW_NET = False
 TRAFFIC_MATRIX = "traffic_matrix.json"
@@ -17,7 +16,6 @@ GENERATE_NEW_TRAFFIC = False
 RANDOM_REQUESTS = True
 NET_SIZE = 8
 NET_TYPE = "as_net"
-SEED = 0
 CONTINUOUS_SCHEME = "adaptive"
 
 # Node parameters
