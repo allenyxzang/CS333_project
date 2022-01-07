@@ -38,12 +38,13 @@ if POWER_LAW:
     max_latencies.append(high_percentile)
     legend.append("Power Law")
 
-fig, ax = plt.subplots(2, 1, figsize=(7, 5))
+fig, ax = plt.subplots(2, 1, figsize=(7, 4))
 
 for al in avg_latencies:
     ax[0].plot(np.arange(len(al)), al)
 ax[0].set_title("Average Latencies")
 ax[0].set_ylabel("Latency")
+ax[0].tick_params(bottom=False, labelbottom=False)
 
 for ml in max_latencies:
     ax[1].plot(np.arange(len(ml)), ml)

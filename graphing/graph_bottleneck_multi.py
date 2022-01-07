@@ -18,7 +18,6 @@ data_path = os.path.join(os.getcwd(), data_dir)
 
 # plotting
 styles = ["-", "--"]
-# styles = ["-"]
 fig, ax = plt.subplots(3, 1, figsize=(7, 6))
 legend = []
 for mem_count in memories:
@@ -42,6 +41,9 @@ for i, (lifetime, probability) in enumerate(zip(lifetimes, probabilities)):
     ax[i].set_title(r'Average Latencies ({} $\tau_m$, {} $p_e$)'.format(
         lifetime, prob_values[probability]))
     ax[i].set_ylabel("Latency")
+
+    if i != len(lifetimes) - 1:
+        ax[i].tick_params(bottom=False, labelbottom=False)
 
 ax[-1].set_xlabel("Request Number")
 ax[-1].legend(legend, loc='upper center', bbox_to_anchor=(0, -0.5, 1, 0), ncol=2)
