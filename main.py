@@ -102,8 +102,10 @@ def run_simulation(graph_arr, nodes, request_stack, end_time):
                     if count > 0:
                         links_available.append(other_label)
                         # entanglement links available for nodes in the route for this request
-                        links = [(label, other_label)] * count
-                        entanglement_available.extend(links)
+                        # avoid repetitive counting
+                        if other_label not in left_neighbors_to_connect:
+                            links = [(label, other_label)] * count
+                            entanglement_available.extend(links)
                 # get links used for request
                 if i > 0:
                     links_used.append(new_route[i-1])
@@ -410,7 +412,7 @@ if __name__ == "__main__":
         avails = [Graph[u][v]["available"] for u,v in edges]
         nx.draw_networkx_nodes(Graph, pos)
         nx.draw_networkx_labels(Graph, pos)
-        edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=avails, width=2, edge_cmap=plt.cm.Greens)
+        edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=avails, width=2, edge_cmap=plt.cm.Greens, edge_vmin=0)
         plt.colorbar(edges_drawn)
         plt.axis('off')
         plt.show()
@@ -420,7 +422,7 @@ if __name__ == "__main__":
         ondemands = [Graph[u][v]["ondemand"] for u,v in edges]
         nx.draw_networkx_nodes(Graph, pos)
         nx.draw_networkx_labels(Graph, pos)
-        edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=ondemands, width=2, edge_cmap=plt.cm.Reds)
+        edges_drawn = nx.draw_networkx_edges(Graph, pos, edge_color=ondemands, width=2, edge_cmap=plt.cm.Reds, edge_vmin=0)
         plt.colorbar(edges_drawn)
         plt.axis('off')
         plt.show()
