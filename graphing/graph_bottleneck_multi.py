@@ -4,10 +4,12 @@ from matplotlib import pyplot as plt
 from graph_utils import *
 
 # network params
-lifetimes = [1000, 100, 1000]
-probabilities = ["small", "small", "large"]
+lifetimes = [1000, 1000, 100]
+probabilities = ["small", "large", "small"]
 prob_values = {"small": 0.01, "large": 0.1}
 memories = [5, 30]
+QUEUE_INT = 200
+window_size = 3
 
 # data storage locations
 data_dir = "data"
@@ -31,21 +33,25 @@ for i, (lifetime, probability) in enumerate(zip(lifetimes, probabilities)):
         # get data for adaptive
         filename = os.path.join(path, filename_adapt_template.format(lifetime, probability))
         latencies, _ = get_data(filename)
-        ax[i].plot(latencies, color='tab:blue', ls=style)
+        avg_latencies = get_moving_average(latencies, window_size)
+        time = np.arange(len(avg_latencies)) * QUEUE_INT
+        ax[i].plot(time, avg_latencies, color='tab:blue', ls=style)
 
         # get data for non-adaptive
         filename = os.path.join(path, filename_template.format(lifetime, probability))
         latencies, _ = get_data(filename)
-        ax[i].plot(latencies, color='tab:orange', ls=style)
+        avg_latencies = get_moving_average(latencies, window_size)
+        time = np.arange(len(avg_latencies)) * QUEUE_INT
+        ax[i].plot(time, avg_latencies, color='tab:orange', ls=style)
 
-    ax[i].set_title(r'Average Latencies ({} $\tau_m$, {} $p_e$)'.format(
+    ax[i].set_title(r'Average Latencies ($\tau_m$ = {}, $p_e$ = {})'.format(
         lifetime, prob_values[probability]))
     ax[i].set_ylabel("Latency")
 
     if i != len(lifetimes) - 1:
         ax[i].tick_params(bottom=False, labelbottom=False)
 
-ax[-1].set_xlabel("Request Number")
+ax[-1].set_xlabel("Simulation Time")
 ax[-1].legend(legend, loc='upper center', bbox_to_anchor=(0, -0.5, 1, 0), ncol=2)
 
 fig.tight_layout()

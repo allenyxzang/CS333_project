@@ -14,3 +14,7 @@ def get_data(filename):
         high_percentile[i] = np.percentile([ll[i] for ll in latencies_list], 95)
 
     return latencies, high_percentile
+
+
+def get_moving_average(data, w):
+    return np.convolve(data, np.ones(w), 'valid') / w

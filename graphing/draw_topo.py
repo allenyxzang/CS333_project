@@ -16,7 +16,7 @@ graph_arr = np.array(topo["array"])
 G = nx.Graph(graph_arr)
 pos = nx.spring_layout(G)
 
-plt.figure(figsize=(7, 4), tight_layout=True)
+plt.figure(figsize=(5, 4), tight_layout=True)
 nx.draw_networkx(G, pos, **draw_kwargs)
 plt.axis('off')
 plt.savefig("network.png")
